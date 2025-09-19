@@ -55,7 +55,7 @@ const courseProgressSchema = new mongoose.Schema(
   },
 );
 
-// Calculate completion percentage before saving
+//#region Calculate completion percentage before saving
 courseProgressSchema.pre("save", async function (next) {
   if (this.lectureProgress.length > 0) {
     const completedLectures = this.lectureProgress.filter(
@@ -68,12 +68,14 @@ courseProgressSchema.pre("save", async function (next) {
   }
   next();
 });
+//#endregion
 
-// Update last accessed
+//#region Update last accessed
 courseProgressSchema.methods.updateLastAccessed = function () {
   this.lastAccessed = Date.now();
   return this.save({ validateBeforeSave: false });
 };
+//#endregion
 
 export const CourseProgress = mongoose.model(
   "CourseProgress",

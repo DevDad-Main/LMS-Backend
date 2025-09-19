@@ -1,5 +1,5 @@
-import { CourseProgress } from "../models/courseProgress.js";
-import { Course } from "../models/course.model.js";
+import { CourseProgress } from "../models/CourseProgress.model.js";
+import { Course } from "../models/Course.model.js";
 import { catchAsync } from "../middleware/error.middleware.js";
 import { AppError } from "../middleware/error.middleware.js";
 

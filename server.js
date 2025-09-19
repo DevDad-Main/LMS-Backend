@@ -10,6 +10,6 @@ const PORT = process.env.PORT || 3000;
 await connectDB();
 
 app.listen(PORT, () => {
-  `Server is listening on: ${PORT}`;
+  console.log(`Server is listening on: ${PORT}`);
 });
 //#endregion

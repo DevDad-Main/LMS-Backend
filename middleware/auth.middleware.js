@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import { AppError } from "./error.middleware.js";
 import { catchAsync } from "./error.middleware.js";
-import { User } from "../models/user.model.js";
+import { User } from "../models/User.model.js";
 
 export const isAuthenticated = catchAsync(async (req, res, next) => {
   // Check if token exists in cookies
@@ -9,7 +9,7 @@ export const isAuthenticated = catchAsync(async (req, res, next) => {
   if (!token) {
     throw new AppError(
       "You are not logged in. Please log in to get access.",
-      401
+      401,
     );
   }
 
@@ -45,7 +45,7 @@ export const restrictTo = (...roles) => {
     if (!roles.includes(req.user.role)) {
       throw new AppError(
         "You do not have permission to perform this action",
-        403
+        403,
       );
     }
     next();

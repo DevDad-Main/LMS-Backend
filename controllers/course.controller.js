@@ -1,6 +1,6 @@
-import { Course } from "../models/course.model.js";
-import { Lecture } from "../models/lecture.model.js";
-import { User } from "../models/user.model.js";
+import { Course } from "../models/Course.model.js";
+import { Lecture } from "../models/Lecture.model.js";
+import { User } from "../models/User.model.js";
 import { deleteMediaFromCloudinary, uploadMedia } from "../utils/cloudinary.js";
 import { catchAsync } from "../middleware/error.middleware.js";
 import { AppError } from "../middleware/error.middleware.js";
