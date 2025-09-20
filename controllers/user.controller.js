@@ -23,6 +23,7 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
  * Create a new user account via google
  * @route POST /api/v1/users/google-login
  */
+//#region Create User Account With Google
 export const createUserAccountWithGoogle = catchAsync(async (req, res) => {
   const { credential } = req.body;
 
@@ -69,6 +70,7 @@ export const createUserAccountWithGoogle = catchAsync(async (req, res) => {
       message: "Google Login Successful",
     });
 });
+//#endregion
 
 /**
  * Create a new user account
