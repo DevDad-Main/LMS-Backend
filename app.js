@@ -16,6 +16,7 @@ import courseProgressRoute from "./routes/courseProgress.route.js";
 //TODO: Change this to use stripe
 // import razorpayRoute from "./routes/razorpay.routes.js";
 import healthRoute from "./routes/health.routes.js";
+import { errorHandler } from "./middleware/error.middleware.js";
 
 //#region Constants
 const app = express();
@@ -85,14 +86,15 @@ app.use((req, res) => {
 //#endregion;
 
 //#region Global Error Handler.
-app.use((err, req, res, next) => {
-  console.error(err);
-  return res.status(err.statusCode || 500).json({
-    status: "error",
-    message: err.message || "Internal server error",
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
-  });
-});
+app.use(errorHandler);
+// app.use((err, req, res, next) => {
+//   console.error(err);
+//   return res.status(err.statusCode || 500).json({
+//     status: "error",
+//     message: err.message || "Internal server error",
+//     ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+//   });
+// });
 //#endregion
 
 export { app };

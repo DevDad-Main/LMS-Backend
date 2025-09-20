@@ -1,10 +1,11 @@
 // Custom error class
 export class AppError extends Error {
-  constructor(message, statusCode) {
+  constructor(message, statusCode, errors = []) {
     super(message);
     this.statusCode = statusCode;
     this.status = `${statusCode}`.startsWith("4") ? "fail" : "error";
     this.isOperational = true;
+    this.errors = errors;
 
     Error.captureStackTrace(this, this.constructor);
   }
@@ -28,6 +29,7 @@ export const errorHandler = (err, req, res, next) => {
       status: err.status,
       error: err,
       message: err.message,
+      errors: err.errors || [],
       stack: err.stack,
     });
   } else {
@@ -37,6 +39,7 @@ export const errorHandler = (err, req, res, next) => {
       res.status(err.statusCode).json({
         status: err.status,
         message: err.message,
+        errors: err.errors,
       });
     } else {
       // Programming or other unknown error: don't leak error details
