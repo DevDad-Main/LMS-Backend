@@ -1,4 +1,4 @@
-// Custom error class
+//#region Custom error class
 export class AppError extends Error {
   constructor(message, statusCode, errors = []) {
     super(message);
@@ -10,15 +10,17 @@ export class AppError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 }
+//#endregion
 
-// Error handler for async functions
+//#region Error handler for async functions
 export const catchAsync = (fn) => {
   return (req, res, next) => {
     fn(req, res, next).catch(next);
   };
 };
+//#endregion
 
-// Global error handling middleware
+//#region Global error handling middleware
 export const errorHandler = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || "error";
@@ -39,7 +41,7 @@ export const errorHandler = (err, req, res, next) => {
       res.status(err.statusCode).json({
         status: err.status,
         message: err.message,
-        errors: err.errors,
+        errors: err.errors || [],
       });
     } else {
       // Programming or other unknown error: don't leak error details
@@ -51,8 +53,9 @@ export const errorHandler = (err, req, res, next) => {
     }
   }
 };
+//#endregion
 
-// Handle specific MongoDB errors
+//#region Handle specific MongoDB errors
 export const handleMongoError = (err) => {
   if (err.name === "CastError") {
     return new AppError(`Invalid ${err.path}: ${err.value}`, 400);
@@ -70,10 +73,14 @@ export const handleMongoError = (err) => {
   }
   return err;
 };
+//#endregion
 
-// Handle JWT errors
+//#region Handle JWT errors
 export const handleJWTError = () =>
   new AppError("Invalid token. Please log in again!", 401);
+//#endregion
 
+//#region Handle JWT Expired Error
 export const handleJWTExpiredError = () =>
   new AppError("Your token has expired! Please log in again.", 401);
+//#endregion
