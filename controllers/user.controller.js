@@ -5,6 +5,7 @@ import { deleteMediaFromCloudinary, uploadMedia } from "../utils/cloudinary.js";
 import { catchAsync } from "../middleware/error.middleware.js";
 import { AppError } from "../middleware/error.middleware.js";
 import crypto from "crypto";
+import { isValidObjectId } from "mongoose";
 import { OAuth2Client } from "google-auth-library";
 import { v7 as uuidv7 } from "uuid";
 
@@ -85,7 +86,24 @@ export const createUserAccount = catchAsync(async (req, res) => {
  * @route POST /api/v1/users/signin
  */
 export const authenticateUser = catchAsync(async (req, res) => {
-  // TODO: Implement user authentication functionality
+  const userId = req.user?._id;
+
+  if (!isValidObjectId(userId)) {
+    throw new AppError("Invalid User Id", 400);
+  }
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new AppError("User Not Found", 400);
+    res.json({ success: false, message: "User not found" });
+  }
+
+  return res.status(200).json({
+    success: true,
+    user,
+    message: "User Passed Authentication Check",
+  });
 });
 
 /**

@@ -17,11 +17,10 @@ export const isAuthenticated = catchAsync(async (req, res, next) => {
     // Verify token
     const decoded = await jwt.verify(token, process.env.JWT_SECRET);
 
-    // Add user ID to request
-    req.id = decoded.userId;
-    const user = await User.findById(req.id);
+    const user = await User.findById(decoded?._id).select("-password");
+
     if (!user) {
-      throw new AppError("User not found", 404);
+      return res.json({ success: false, message: "Unauthorized" });
     }
 
     req.user = user;

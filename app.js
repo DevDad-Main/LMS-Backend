@@ -20,6 +20,7 @@ import { errorHandler } from "./middleware/error.middleware.js";
 
 //#region Constants
 const app = express();
+const allowedOrigins = process.env.CLIENT_URL.split(",");
 //#endregion
 
 //#region Middlewares
@@ -50,7 +51,7 @@ app.use(cookieParser());
 // CORS Configuration
 app.use(
   cors({
-    origin: process.env.CLIENT_URL.split(",") || "http://localhost:5173",
+    origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"],
     allowedHeaders: [

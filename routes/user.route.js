@@ -24,6 +24,7 @@ router.post("/signup", validateSignup, createUserAccount);
 router.post("/google-login", createUserAccountWithGoogle);
 router.post("/signin", validateSignin, authenticateUser);
 router.post("/signout", signOutUser);
+router.get("/user-authenticated", isAuthenticated, authenticateUser);
 
 // Profile routes
 router.get("/profile", isAuthenticated, getCurrentUserProfile);
