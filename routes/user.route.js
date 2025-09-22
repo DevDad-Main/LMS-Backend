@@ -23,7 +23,7 @@ const router = express.Router();
 router.post("/signup", validateSignup, createUserAccount);
 router.post("/google-login", createUserAccountWithGoogle);
 router.post("/signin", validateSignin, authenticateUser);
-router.post("/signout", signOutUser);
+router.get("/signout", signOutUser);
 router.get("/user-authenticated", isAuthenticated, authenticateUser);
 
 // Profile routes

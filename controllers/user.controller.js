@@ -114,9 +114,14 @@ export const authenticateUser = catchAsync(async (req, res) => {
  * Sign out user and clear cookie
  * @route POST /api/v1/users/signout
  */
+//#region User Sign out
 export const signOutUser = catchAsync(async (_, res) => {
-  // TODO: Implement sign out functionality
+  return res
+    .status(200)
+    .clearCookie("token", options)
+    .json({ success: true, message: "User Signed Out" });
 });
+//#endregion
 
 /**
  * Get current user profile
