@@ -77,14 +77,17 @@ export const createUserAccountWithGoogle = catchAsync(async (req, res) => {
  * Create a new user account
  * @route POST /api/v1/users/signup
  */
+//#region Create User With Non Google Signup
 export const createUserAccount = catchAsync(async (req, res) => {
   // TODO: Implement create user account functionality
 });
+//#endregion
 
 /**
- * Authenticate user and get token
+ * Authenticate user and get token to keep user logged in
  * @route POST /api/v1/users/signin
  */
+//#region User Authentication
 export const authenticateUser = catchAsync(async (req, res) => {
   const userId = req.user?._id;
 
@@ -105,6 +108,7 @@ export const authenticateUser = catchAsync(async (req, res) => {
     message: "User Passed Authentication Check",
   });
 });
+//#endregion
 
 /**
  * Sign out user and clear cookie
