@@ -10,7 +10,10 @@ import { AppError } from "../middleware/error.middleware.js";
  * @route POST /api/v1/courses
  */
 export const createNewCourse = catchAsync(async (req, res) => {
-  // TODO: Implement create new course functionality
+  //TODO: Destructure req.body as its sent as whole object and JSON.parse sections field
+  const {} = req.body;
+
+  console.log(req.body);
 });
 
 /**

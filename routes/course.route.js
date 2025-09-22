@@ -22,11 +22,12 @@ router.get("/search", searchCourses);
 router.use(isAuthenticated);
 
 // Course management
-router
-  .route("/")
-  .post(restrictTo("instructor"), upload.single("thumbnail"), createNewCourse)
-  .get(restrictTo("instructor"), getMyCreatedCourses);
+router.route("/").get(restrictTo("instructor"), getMyCreatedCourses);
 
+router
+  .route("/add-course")
+  // .post(restrictTo("instructor"), upload.single("thumbnail"), createNewCourse);
+  .post(upload.single("thumbnail"), createNewCourse);
 // Course details and updates
 router
   .route("/c/:courseId")
@@ -34,7 +35,7 @@ router
   .patch(
     restrictTo("instructor"),
     upload.single("thumbnail"),
-    updateCourseDetails
+    updateCourseDetails,
   );
 
 // Lecture management

@@ -8,11 +8,11 @@ const courseSchema = new mongoose.Schema(
       trim: true,
       maxLength: [100, "Course title cannot exceed 100 characters"],
     },
-    subtitle: {
-      type: String,
-      trim: true,
-      maxLength: [200, "Course subtitle cannot exceed 200 characters"],
-    },
+    // subtitle: {
+    //   type: String,
+    //   trim: true,
+    //   maxLength: [200, "Course subtitle cannot exceed 200 characters"],
+    // },
     description: {
       type: String,
       trim: true,
@@ -57,9 +57,9 @@ const courseSchema = new mongoose.Schema(
     ],
     sections: [
       {
-        title: String,
-        min: [1, "Course must contain at least one section"],
-        max: [20, "Course can only contain max 20 section"],
+        title: { type: String },
+        // min: [1, "Course must contain at least one section"],
+        // max: [20, "Course can only contain max 20 section"],
         lectures: {
           type: [
             {
@@ -85,6 +85,7 @@ const courseSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // DAta gathered from the video wehn we upload to cloudinary
     totalDuration: {
       type: Number,
       default: 0,
@@ -93,6 +94,7 @@ const courseSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    notes: [{ type: String }], // Make a schema for notes
   },
   {
     timestamps: true,
