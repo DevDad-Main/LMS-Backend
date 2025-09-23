@@ -34,6 +34,14 @@ const lectureSchema = new mongoose.Schema(
       type: mongoose.SchemaTypes.ObjectId,
       ref: "Course",
     },
+    section: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: "Section",
+    },
+    isCompleted: {
+      type: Boolean,
+      default: false,
+    },
     // order: {
     //   type: Number,
     //   required: [true, "Lecture order is required"],

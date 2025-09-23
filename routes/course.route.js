@@ -2,6 +2,7 @@ import express from "express";
 import { isAuthenticated, restrictTo } from "../middleware/auth.middleware.js";
 import {
   createNewCourse,
+  addSection,
   searchCourses,
   getPublishedCourses,
   getMyCreatedCourses,
@@ -32,7 +33,7 @@ router
   .post(upload.single("thumbnail"), createNewCourse);
 // Course details and updates
 router
-  .route("/c/:courseId")
+  .route("/c/:id")
   .get(getCourseDetails)
   .put(upload.single("thumbnail"), updateCourseDetails);
 // .patch(
@@ -55,7 +56,12 @@ router.put(
 
 //TODO: Add Later
 // // Section routes
-// router.post("/:courseId/add-section", protect, addSection);
+router.post(
+  "/:courseId/add-section",
+  isAuthenticated,
+  upload.none(),
+  addSection,
+);
 // router.put("/:courseId/update-section/:sectionId", protect, updateSection);
 // router.delete("/:courseId/delete-section/:sectionId", protect, deleteSection);
 

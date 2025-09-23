@@ -1,4 +1,5 @@
 import { Course } from "../models/Course.model.js";
+import { Section } from "../models/Section.model.js";
 import { Lecture } from "../models/Lecture.model.js";
 import { User } from "../models/User.model.js";
 import {
@@ -88,7 +89,7 @@ export const getMyCreatedCourses = catchAsync(async (req, res) => {
   }
 
   const courses = await Course.find({ courseOwner: userId }).select(
-    "title description category level price thumbnail totalLectures totalDuration isPublished",
+    "title description category level price thumbnail sections instructor",
   );
 
   console.log(courses);
@@ -106,15 +107,15 @@ export const getMyCreatedCourses = catchAsync(async (req, res) => {
 export const updateCourseDetails = catchAsync(async (req, res) => {
   const { title, description, category, level, price, updateThumbnail } =
     req.body;
-  const { courseId } = req.params;
+  const { id } = req.params;
 
-  if (!isValidObjectId(courseId)) {
+  if (!isValidObjectId(id)) {
     throw new AppError("Invalid Course ID", 404);
   }
 
   const thumbnailFile = req.file;
 
-  const course = await Course.findById(courseId);
+  const course = await Course.findById(id);
   if (!course) {
     throw new AppError("Course not found", 404);
   }
@@ -169,23 +170,25 @@ export const updateCourseLecture = catchAsync(async (req, res) => {});
 //#region Get Course Details By ID
 export const getCourseDetails = catchAsync(async (req, res) => {
   // TODO: Implement get course details functionality
-  const { courseId } = req.params;
+  const { id } = req.params;
 
   console.log(req.params);
 
-  if (!isValidObjectId(courseId)) {
+  if (!isValidObjectId(id)) {
     throw new AppError("Invalid Course ID", 404);
   }
 
-  const course = await Course.findById(courseId)
+  const course = await Course.findById(id)
     .populate({
       path: "sections",
       select: "title _id",
       populate: {
         path: "lectures",
-        select: "title type content video _id",
+        select: "title videoUrl _id",
       },
     })
+    .populate("instructor")
+    // .populate("instructor", "name bio email") // Add this
     .select(
       "title description category level price thumbnail sections instructor",
     );
@@ -210,9 +213,7 @@ export const getCourseDetails = catchAsync(async (req, res) => {
         lectures: section.lectures.map((lecture) => ({
           _id: lecture._id,
           title: lecture.title,
-          type: lecture.type,
-          content: lecture.content || "",
-          video: lecture.video || "",
+          video: lecture.videoUrl || "",
         })),
       })),
     },
@@ -226,53 +227,82 @@ export const getCourseDetails = catchAsync(async (req, res) => {
  */
 export const addLectureToCourse = catchAsync(async (req, res) => {
   // TODO: Implement add lecture to course functionality
-  const { title, courseId } = req.body;
-  console.log(req.body);
 
+  console.log("req.body:", req.body);
+  console.log("req.params:", req.params);
+  console.log("req.file:", req.file);
+
+  const { courseId, sectionId } = req.params;
+  const { title, type, content } = req.body;
   const videoFile = req.file;
 
-  if (!isValidObjectId(courseId)) {
+  // Validate courseId and sectionId
+  if (!isValidObjectId(courseId) || !isValidObjectId(sectionId)) {
+    throw new AppError("Invalid Course or Section ID");
+  }
+
+  if (!videoFile) {
+    throw new AppError("Video file is required for video lectures", 400);
+  }
+
+  // Verify course exists and user is authorized
+  const course = await Course.findById(courseId);
+  if (!course) {
     throw new AppError("Course Not Found", 404);
   }
 
-  const course = await Course.findById(courseId);
+  // Verify section exists and belongs to the course
+  const section = await Section.findById(sectionId);
+  if (!section) {
+    throw new AppError("Section Not Found", 404);
+  }
 
+  if (section.course.toString() !== courseId) {
+    throw new AppError("Section does not belong to this course", 400);
+  }
+
+  // Handle video upload for video lectures
   let videoUrl = "";
   let duration = 0;
-
-  if (videoFile) {
+  if (type === "Video" && videoFile) {
     const folderId = course.folderId || `course-${courseId}`;
     const result = await uploadBufferToCloudinary(videoFile.buffer, folderId);
     videoUrl = result.secure_url;
     duration = result.duration || 0;
-  } else {
-    return res.status(400).json({
-      success: false,
-      message: "Video file is required for video lectures",
-    });
   }
 
+  // Create the lecture
   const lecture = await Lecture.create({
     title,
-    // content: type === "Text" ? content : undefined,
     videoUrl: videoUrl,
     duration,
+    section: sectionId,
     course: courseId,
   });
 
-  await Course.findByIdAndUpdate(
-    courseId,
-    {
-      $push: { lectures: lecture._id },
-      $inc: { totalLectures: 1, totalDuration: duration },
-    },
-    { new: true },
-  );
+  // Update the section with the new lecture
+  await Section.findByIdAndUpdate(sectionId, {
+    $push: { lectures: lecture._id },
+  });
 
-  res.status(201).json({
+  // Update course totalDuration
+  if (duration > 0) {
+    await Course.findByIdAndUpdate(courseId, {
+      $inc: { totalDuration: duration },
+    });
+  }
+
+  return res.status(201).json({
     success: true,
     lectureId: lecture._id,
-    lecture,
+    lecture: {
+      _id: lecture._id,
+      title: lecture.title,
+      type: lecture.type,
+      content: lecture.content || "",
+      video: lecture.videoUrl || "",
+      duration: lecture.duration,
+    },
   });
 });
 
@@ -282,4 +312,48 @@ export const addLectureToCourse = catchAsync(async (req, res) => {
  */
 export const getCourseLectures = catchAsync(async (req, res) => {
   // TODO: Implement get course lectures functionality
+});
+
+export const addSection = catchAsync(async (req, res) => {
+  console.log("req.body:", req.body);
+  console.log("req.params:", req.params);
+
+  const { courseId } = req.params;
+  const { title } = req.body;
+
+  if (!isValidObjectId(courseId)) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid Course ID" });
+  }
+
+  if (!title) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Title is required" });
+  }
+
+  const course = await Course.findById(courseId);
+  if (!course) {
+    return res
+      .status(404)
+      .json({ success: false, message: "Course not found" });
+  }
+
+  // if (course.instructor.toString() !== req.user._id.toString()) {
+  //   return res.status(403).json({ success: false, message: "Unauthorized" });
+  // }
+
+  if (course.sections.length >= 20) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Maximum 20 sections allowed" });
+  }
+
+  const section = await Section.create({ title, course: courseId });
+  await Course.findByIdAndUpdate(courseId, {
+    $push: { sections: section._id },
+  });
+
+  res.status(201).json({ success: true, sectionId: section._id });
 });
