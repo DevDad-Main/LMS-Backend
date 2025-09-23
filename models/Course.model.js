@@ -55,27 +55,25 @@ const courseSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
-    sections: [
-      {
-        title: { type: String },
-        // min: [1, "Course must contain at least one section"],
-        // max: [20, "Course can only contain max 20 section"],
-        lectures: {
-          type: [
-            {
-              type: mongoose.Schema.Types.ObjectId,
-              ref: "Lecture",
-            },
-          ],
-          validate: {
-            validator: function (arr) {
-              return arr.length <= 30;
-            },
-            message: "A section cannot have more than 30 lectures.",
+    section: {
+      title: String,
+      // min: [1, "Course must contain at least one section"],
+      // max: [20, "Course can only contain max 20 section"],
+      lectures: {
+        type: [
+          {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Lecture",
           },
+        ],
+        validate: {
+          validator: function (arr) {
+            return arr.length <= 20;
+          },
+          message: "A section cannot have more than 20 lectures.",
         },
       },
-    ],
+    },
     instructor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
