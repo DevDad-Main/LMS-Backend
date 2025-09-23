@@ -57,14 +57,10 @@ const courseSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
-    lectures: [
+    sections: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Lecture",
-        validate: {
-          validator: (arr) => arr.length <= 20,
-          message: "A course cannot have more than 20 lectures.",
-        },
+        ref: "Section",
       },
     ],
     instructor: {

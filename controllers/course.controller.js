@@ -10,11 +10,11 @@ import { catchAsync } from "../middleware/error.middleware.js";
 import { AppError } from "../middleware/error.middleware.js";
 import { isValidObjectId } from "mongoose";
 
+//#region Create New Course
 /**
  * Create a new course
  * @route POST /api/v1/courses
  */
-//#region Create New Course
 export const createNewCourse = catchAsync(async (req, res) => {
   //TODO: Destructure req.body as its sent as whole object and JSON.parse sections field
 
@@ -30,6 +30,7 @@ export const createNewCourse = catchAsync(async (req, res) => {
     level,
     price,
     instructor: req.user?._id,
+    courseOwner: req.user?._id,
   });
 
   console.log(thumbnail);
@@ -73,11 +74,11 @@ export const getPublishedCourses = catchAsync(async (req, res) => {
   // TODO: Implement get published courses functionality
 });
 
+//#region Get Admin/Instructor Created Courses
 /**
  * Get courses created by the current user
  * @route GET /api/v1/courses/my-courses
  */
-//#region Get Admin/Instructor Created Courses
 export const getMyCreatedCourses = catchAsync(async (req, res) => {
   //TODO: Later handle this differently with a seperate admin/instructor section
   const userId = req.user?._id;
@@ -86,11 +87,9 @@ export const getMyCreatedCourses = catchAsync(async (req, res) => {
     throw new AppError("Not a valid ID", 404);
   }
 
-  const courses = await Course.find({ courseOwner: userId })
-    .populate("lectures")
-    .select(
-      "title description category level price thumbnail totalLectures totalDuration isPublished",
-    );
+  const courses = await Course.find({ courseOwner: userId }).select(
+    "title description category level price thumbnail totalLectures totalDuration isPublished",
+  );
 
   console.log(courses);
   return res
@@ -99,11 +98,11 @@ export const getMyCreatedCourses = catchAsync(async (req, res) => {
 });
 //#endregion
 
+//#region Update Course Details
 /**
  * Update course details
  * @route PATCH /api/v1/courses/:courseId
  */
-//#region Update Course Details
 export const updateCourseDetails = catchAsync(async (req, res) => {
   const { title, description, category, level, price, updateThumbnail } =
     req.body;
@@ -167,9 +166,59 @@ export const updateCourseLecture = catchAsync(async (req, res) => {});
  * Get course by ID
  * @route GET /api/v1/courses/:courseId
  */
+//#region Get Course Details By ID
 export const getCourseDetails = catchAsync(async (req, res) => {
   // TODO: Implement get course details functionality
+  const { courseId } = req.params;
+
+  console.log(req.params);
+
+  if (!isValidObjectId(courseId)) {
+    throw new AppError("Invalid Course ID", 404);
+  }
+
+  const course = await Course.findById(courseId)
+    .populate({
+      path: "sections",
+      select: "title _id",
+      populate: {
+        path: "lectures",
+        select: "title type content video _id",
+      },
+    })
+    .select(
+      "title description category level price thumbnail sections instructor",
+    );
+
+  if (!course) {
+    throw new AppError("Course Not Found", 404);
+  }
+
+  return res.status(200).json({
+    success: true,
+    course: {
+      _id: course._id,
+      title: course.title,
+      description: course.description,
+      category: course.category,
+      level: course.level,
+      price: course.price,
+      thumbnail: course.thumbnail || "",
+      sections: course.sections.map((section) => ({
+        _id: section._id,
+        title: section.title,
+        lectures: section.lectures.map((lecture) => ({
+          _id: lecture._id,
+          title: lecture.title,
+          type: lecture.type,
+          content: lecture.content || "",
+          video: lecture.video || "",
+        })),
+      })),
+    },
+  });
 });
+//#endregion
 
 /**
  * Add lecture to course

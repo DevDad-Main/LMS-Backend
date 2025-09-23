@@ -6,6 +6,7 @@ import {
   createUserAccountWithGoogle,
   deleteUserAccount,
   getCurrentUserProfile,
+  getEnrolledCourses,
   signOutUser,
   updateUserProfile,
 } from "../controllers/user.controller.js";

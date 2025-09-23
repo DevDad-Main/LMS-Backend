@@ -23,6 +23,7 @@ router.use(isAuthenticated);
 
 // Course management
 // router.route("/").get(restrictTo("instructor"), getMyCreatedCourses);
+
 router.route("/courses").get(getMyCreatedCourses);
 
 router
@@ -51,5 +52,27 @@ router.put(
   upload.single("videoFile"),
   addLectureToCourse,
 );
+
+//TODO: Add Later
+// // Section routes
+// router.post("/:courseId/add-section", protect, addSection);
+// router.put("/:courseId/update-section/:sectionId", protect, updateSection);
+// router.delete("/:courseId/delete-section/:sectionId", protect, deleteSection);
+
+// Lecture routes
+router.post(
+  "/:courseId/section/:sectionId/add-lecture",
+  isAuthenticated,
+  upload.single("videoFile"),
+  addLectureToCourse,
+);
+
+router.put(
+  "/:courseId/update-lecture/:lectureId",
+  isAuthenticated,
+  upload.single("videoFile"),
+  // updateLecture,
+);
+// router.delete("/:courseId/delete-lecture/:lectureId", protect, deleteLecture);
 
 export default router;

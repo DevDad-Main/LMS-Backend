@@ -1,9 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import streamifier from "streamifier";
 
-//NOTE: We have to import dotenv manually as cloudinary returns an error
-//NOTE: That it cannot find the api key, so having it in our index.js isnt enough
-
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
