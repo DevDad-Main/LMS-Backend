@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { v7 as uuidv7 } from "uuid";
 
 const courseSchema = new mongoose.Schema(
   {
@@ -55,25 +56,16 @@ const courseSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
-    section: {
-      title: String,
-      // min: [1, "Course must contain at least one section"],
-      // max: [20, "Course can only contain max 20 section"],
-      lectures: {
-        type: [
-          {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Lecture",
-          },
-        ],
+    lectures: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Lecture",
         validate: {
-          validator: function (arr) {
-            return arr.length <= 20;
-          },
-          message: "A section cannot have more than 20 lectures.",
+          validator: (arr) => arr.length <= 20,
+          message: "A course cannot have more than 20 lectures.",
         },
       },
-    },
+    ],
     instructor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -93,6 +85,10 @@ const courseSchema = new mongoose.Schema(
       default: 0,
     },
     notes: [{ type: String }], // Make a schema for notes
+    folderId: {
+      type: String,
+      unique: true,
+    },
   },
   {
     timestamps: true,
@@ -109,8 +105,12 @@ courseSchema.virtual("averageRating").get(function () {
 
 //#region Update total lectures count when lectures are modified
 courseSchema.pre("save", function (next) {
-  if (this.lectures) {
-    this.totalLectures = this.lectures.length;
+  // if (this.lectures) {
+  //   this.totalLectures = this.lectures.length;
+  // }
+
+  if (!this.folderId) {
+    this.folderId = uuidv7();
   }
   next();
 });

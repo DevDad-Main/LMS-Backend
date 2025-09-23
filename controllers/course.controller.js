@@ -11,9 +11,20 @@ import { AppError } from "../middleware/error.middleware.js";
  */
 export const createNewCourse = catchAsync(async (req, res) => {
   //TODO: Destructure req.body as its sent as whole object and JSON.parse sections field
-  const {} = req.body;
 
+  const { title, description, category, level, price } = req.body;
   console.log(req.body);
+
+  const course = await Course.create({
+    title,
+    description,
+    category,
+    level,
+    price,
+  });
+
+  const thumbnail = req.file;
+  console.log(thumbnail);
 });
 
 /**
