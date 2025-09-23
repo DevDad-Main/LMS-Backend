@@ -13,26 +13,31 @@ const lectureSchema = new mongoose.Schema(
       trim: true,
       maxLength: [500, "Lecture description cannot exceed 500 characters"],
     },
+    // type: { type: String, enum: ["Video, Text"] },
     videoUrl: {
       type: String,
-      required: [true, "Video URL is required"],
+      // required: [true, "Video URL is required"],
     },
     duration: {
       type: Number,
       default: 0,
     },
-    publicId: {
-      type: String,
-      required: [true, "Public ID is required for video management"],
-    },
+    // publicId: {
+    //   type: String,
+    //   required: [true, "Public ID is required for video management"],
+    // },
     isPreview: {
       type: Boolean,
       default: false,
     },
-    order: {
-      type: Number,
-      required: [true, "Lecture order is required"],
+    course: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: "Course",
     },
+    // order: {
+    //   type: Number,
+    //   required: [true, "Lecture order is required"],
+    // },
   },
   {
     timestamps: true,

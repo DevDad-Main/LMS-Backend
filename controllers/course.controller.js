@@ -1,14 +1,20 @@
 import { Course } from "../models/Course.model.js";
 import { Lecture } from "../models/Lecture.model.js";
 import { User } from "../models/User.model.js";
-import { uploadBufferToCloudinary } from "../utils/cloudinary.js";
+import {
+  uploadBufferToCloudinary,
+  getPublicIdFromUrl,
+  deleteImageFromCloudinary,
+} from "../utils/cloudinary.js";
 import { catchAsync } from "../middleware/error.middleware.js";
 import { AppError } from "../middleware/error.middleware.js";
+import { isValidObjectId } from "mongoose";
 
 /**
  * Create a new course
  * @route POST /api/v1/courses
  */
+//#region Create New Course
 export const createNewCourse = catchAsync(async (req, res) => {
   //TODO: Destructure req.body as its sent as whole object and JSON.parse sections field
 
@@ -49,6 +55,7 @@ export const createNewCourse = catchAsync(async (req, res) => {
     message: "Course Successfully Added",
   });
 });
+//#endregion
 
 /**
  * Search courses with filters
@@ -70,17 +77,91 @@ export const getPublishedCourses = catchAsync(async (req, res) => {
  * Get courses created by the current user
  * @route GET /api/v1/courses/my-courses
  */
+//#region Get Admin/Instructor Created Courses
 export const getMyCreatedCourses = catchAsync(async (req, res) => {
-  // TODO: Implement get my created courses functionality
+  //TODO: Later handle this differently with a seperate admin/instructor section
+  const userId = req.user?._id;
+
+  if (!isValidObjectId(userId)) {
+    throw new AppError("Not a valid ID", 404);
+  }
+
+  const courses = await Course.find({ courseOwner: userId })
+    .populate("lectures")
+    .select(
+      "title description category level price thumbnail totalLectures totalDuration isPublished",
+    );
+
+  console.log(courses);
+  return res
+    .status(200)
+    .json({ success: true, courses, message: "Courses fetched successfully" });
 });
+//#endregion
 
 /**
  * Update course details
  * @route PATCH /api/v1/courses/:courseId
  */
+//#region Update Course Details
 export const updateCourseDetails = catchAsync(async (req, res) => {
-  // TODO: Implement update course details functionality
+  const { title, description, category, level, price, updateThumbnail } =
+    req.body;
+  const { courseId } = req.params;
+
+  if (!isValidObjectId(courseId)) {
+    throw new AppError("Invalid Course ID", 404);
+  }
+
+  const thumbnailFile = req.file;
+
+  const course = await Course.findById(courseId);
+  if (!course) {
+    throw new AppError("Course not found", 404);
+  }
+
+  const updateData = {
+    title,
+    description,
+    category,
+    level,
+    price,
+  };
+
+  let thumbnail;
+  if (updateThumbnail === "true" && thumbnailFile) {
+    // Upload new thumbnail and delete old one
+    const folderId = course.folderId || `course-${courseId}`;
+    const result = await uploadBufferToCloudinary(
+      thumbnailFile.buffer,
+      folderId,
+    );
+
+    if (course.thumbnail) {
+      const oldPublicId = getPublicIdFromUrl(course.thumbnail);
+      await deleteImageFromCloudinary(oldPublicId);
+    }
+
+    thumbnail = result.secure_url;
+  } else if (!updateThumbnail || updateThumbnail === "false") {
+    // Keep existing thumbnail
+    thumbnail = course.thumbnail;
+  }
+
+  Object.assign(course, updateData);
+  await course.save();
+
+  return res
+    .status(200)
+    .json({ success: true, course, message: "Course Updated Successfully" });
 });
+//#endregion
+
+/**
+ * Update course details
+ * @route PUT /api/v1/course/update-lecture/${editingLectureId}
+ */
+export const updateCourseLecture = catchAsync(async (req, res) => {});
 
 /**
  * Get course by ID
@@ -96,6 +177,54 @@ export const getCourseDetails = catchAsync(async (req, res) => {
  */
 export const addLectureToCourse = catchAsync(async (req, res) => {
   // TODO: Implement add lecture to course functionality
+  const { title, courseId } = req.body;
+  console.log(req.body);
+
+  const videoFile = req.file;
+
+  if (!isValidObjectId(courseId)) {
+    throw new AppError("Course Not Found", 404);
+  }
+
+  const course = await Course.findById(courseId);
+
+  let videoUrl = "";
+  let duration = 0;
+
+  if (videoFile) {
+    const folderId = course.folderId || `course-${courseId}`;
+    const result = await uploadBufferToCloudinary(videoFile.buffer, folderId);
+    videoUrl = result.secure_url;
+    duration = result.duration || 0;
+  } else {
+    return res.status(400).json({
+      success: false,
+      message: "Video file is required for video lectures",
+    });
+  }
+
+  const lecture = await Lecture.create({
+    title,
+    // content: type === "Text" ? content : undefined,
+    videoUrl: videoUrl,
+    duration,
+    course: courseId,
+  });
+
+  await Course.findByIdAndUpdate(
+    courseId,
+    {
+      $push: { lectures: lecture._id },
+      $inc: { totalLectures: 1, totalDuration: duration },
+    },
+    { new: true },
+  );
+
+  res.status(201).json({
+    success: true,
+    lectureId: lecture._id,
+    lecture,
+  });
 });
 
 /**

@@ -123,6 +123,26 @@ export const signOutUser = catchAsync(async (_, res) => {
 });
 //#endregion
 
+//#region Users Enrolled Courses
+export const getEnrolledCourses = catchAsync(async (req, res) => {
+  const userId = req.user?._id;
+
+  if (!isValidObjectId(userId)) {
+    throw new AppError("Invalid User Id", 404);
+  }
+
+  //NOTE: Testing purposes only limit it to 5 documents
+  const user = await User.findById(userId).populate("enrolledCourses").limit(5);
+  if (!user) {
+    throw new AppError("User Not Found", 404);
+  }
+
+  return res
+    .status(200)
+    .json({ success: true, user, message: "User Courses Fetched" });
+});
+//#endregion
+
 /**
  * Get current user profile
  * @route GET /api/v1/users/profile

@@ -89,6 +89,11 @@ const courseSchema = new mongoose.Schema(
       type: String,
       unique: true,
     },
+    courseOwner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "Course Owner is required"],
+    },
   },
   {
     timestamps: true,

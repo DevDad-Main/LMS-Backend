@@ -25,6 +25,7 @@ router.post("/google-login", createUserAccountWithGoogle);
 router.post("/signin", validateSignin, authenticateUser);
 router.get("/signout", signOutUser);
 router.get("/user-authenticated", isAuthenticated, authenticateUser);
+router.get("/enrolled-courses", isAuthenticated, getEnrolledCourses);
 
 // Profile routes
 router.get("/profile", isAuthenticated, getCurrentUserProfile);

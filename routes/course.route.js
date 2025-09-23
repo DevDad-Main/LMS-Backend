@@ -22,7 +22,8 @@ router.get("/search", searchCourses);
 router.use(isAuthenticated);
 
 // Course management
-router.route("/").get(restrictTo("instructor"), getMyCreatedCourses);
+// router.route("/").get(restrictTo("instructor"), getMyCreatedCourses);
+router.route("/courses").get(getMyCreatedCourses);
 
 router
   .route("/add-course")
@@ -32,16 +33,23 @@ router
 router
   .route("/c/:courseId")
   .get(getCourseDetails)
-  .patch(
-    restrictTo("instructor"),
-    upload.single("thumbnail"),
-    updateCourseDetails,
-  );
+  .put(upload.single("thumbnail"), updateCourseDetails);
+// .patch(
+//   restrictTo("instructor"),
+//   upload.single("thumbnail"),
+//   updateCourseDetails,
+// );
 
 // Lecture management
-router
-  .route("/c/:courseId/lectures")
-  .get(getCourseLectures)
-  .post(restrictTo("instructor"), upload.single("video"), addLectureToCourse);
+router.route("/c/:courseId").get(getCourseLectures);
+// .post(restrictTo("instructor"), upload.single("video"), addLectureToCourse);
+
+router.post("/add-lecture", upload.single("videoFile"), addLectureToCourse);
+
+router.put(
+  "/update-lecture/:editingLectureId",
+  upload.single("videoFile"),
+  addLectureToCourse,
+);
 
 export default router;
