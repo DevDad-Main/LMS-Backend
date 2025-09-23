@@ -1,7 +1,7 @@
 import { Course } from "../models/Course.model.js";
 import { Lecture } from "../models/Lecture.model.js";
 import { User } from "../models/User.model.js";
-import { deleteMediaFromCloudinary, uploadMedia } from "../utils/cloudinary.js";
+import { uploadBufferToCloudinary } from "../utils/cloudinary.js";
 import { catchAsync } from "../middleware/error.middleware.js";
 import { AppError } from "../middleware/error.middleware.js";
 
@@ -15,16 +15,39 @@ export const createNewCourse = catchAsync(async (req, res) => {
   const { title, description, category, level, price } = req.body;
   console.log(req.body);
 
+  const thumbnail = req.file;
+
   const course = await Course.create({
     title,
     description,
     category,
     level,
     price,
+    instructor: req.user?._id,
   });
 
-  const thumbnail = req.file;
   console.log(thumbnail);
+  console.log(thumbnail.buffer);
+
+  const result = await uploadBufferToCloudinary(
+    thumbnail.buffer,
+    course.folderId,
+  );
+
+  console.log("Result: ", result);
+
+  if (!result) {
+    throw new AppError("Can't upload thumbnail to cloundinary", 400);
+  }
+
+  course.thumbnail = result.secure_url;
+  await course.save();
+
+  return res.status(201).json({
+    success: true,
+    courseId: course._id,
+    message: "Course Successfully Added",
+  });
 });
 
 /**

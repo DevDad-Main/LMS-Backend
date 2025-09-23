@@ -1,7 +1,7 @@
 import { User } from "../models/User.model.js";
 import bcrypt from "bcryptjs";
 import generateUserToken from "../utils/generateToken.js";
-import { deleteMediaFromCloudinary, uploadMedia } from "../utils/cloudinary.js";
+import {} from "../utils/cloudinary.js";
 import { catchAsync } from "../middleware/error.middleware.js";
 import { AppError } from "../middleware/error.middleware.js";
 import crypto from "crypto";

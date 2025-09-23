@@ -17,6 +17,7 @@ const courseSchema = new mongoose.Schema(
     description: {
       type: String,
       trim: true,
+      maxLength: [200, "Course subtitle cannot exceed 200 characters"],
     },
     category: {
       type: String,
@@ -36,10 +37,10 @@ const courseSchema = new mongoose.Schema(
     level: {
       type: String,
       enum: {
-        values: ["beginner", "intermediate", "advanced"],
+        values: ["Beginner", "Intermediate", "Advanced"],
         message: "Please select a valid course level",
       },
-      default: "beginner",
+      default: "Beginner",
     },
     price: {
       type: Number,
@@ -48,7 +49,7 @@ const courseSchema = new mongoose.Schema(
     },
     thumbnail: {
       type: String,
-      required: [true, "Course thumbnail is required"],
+      // required: [true, "Course thumbnail is required"],
     },
     enrolledStudents: [
       {
@@ -73,7 +74,7 @@ const courseSchema = new mongoose.Schema(
     },
     isPublished: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     // DAta gathered from the video wehn we upload to cloudinary
     totalDuration: {
@@ -84,7 +85,6 @@ const courseSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    notes: [{ type: String }], // Make a schema for notes
     folderId: {
       type: String,
       unique: true,

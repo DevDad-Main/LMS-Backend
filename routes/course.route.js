@@ -10,7 +10,7 @@ import {
   addLectureToCourse,
   getCourseLectures,
 } from "../controllers/course.controller.js";
-import upload from "../utils/multer.js";
+import { upload } from "../utils/multer.js";
 
 const router = express.Router();
 

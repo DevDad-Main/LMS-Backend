@@ -10,7 +10,7 @@ import {
   updateUserProfile,
 } from "../controllers/user.controller.js";
 import { isAuthenticated } from "../middleware/auth.middleware.js";
-import upload from "../utils/multer.js";
+import { upload } from "../utils/multer.js";
 import {
   validateSignup,
   validateSignin,
