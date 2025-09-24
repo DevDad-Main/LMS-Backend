@@ -224,14 +224,25 @@ export const getEnrolledCourses = catchAsync(async (req, res) => {
   }
 
   //NOTE: Testing purposes only limit it to 5 documents
-  const user = await User.findById(userId).populate("enrolledCourses").limit(5);
+  const user = await User.findById(userId)
+    .populate("enrolledCourses")
+    .populate("instructor")
+    // .populate("instructor", "name bio email") // Add this
+    .select(
+      "title description category level price thumbnail sections instructor",
+    )
+    .limit(5);
   if (!user) {
-    throw new AppError("User Not Found", 404);
+    throw new AppError("No User Found", 404);
   }
 
-  return res
-    .status(200)
-    .json({ success: true, user, message: "User Courses Fetched" });
+  console.log(user.enrolledCourses);
+
+  return res.status(200).json({
+    success: true,
+    enrolledCourses: user.enrolledCourses,
+    message: "User Courses Fetched",
+  });
 });
 //#endregion
 
