@@ -1,4 +1,5 @@
 import { Course } from "../models/Course.model.js";
+import { CourseProgress } from "../models/CourseProgress.model.js";
 import { Section } from "../models/Section.model.js";
 import { Lecture } from "../models/Lecture.model.js";
 import { User } from "../models/User.model.js";
@@ -163,6 +164,12 @@ export const updateCourseDetails = catchAsync(async (req, res) => {
  */
 export const updateCourseLecture = catchAsync(async (req, res) => {});
 
+/**
+ * Update course details
+ * @route PUT /api/v1/course/update-lecture/${editingLectureId}
+ */
+export const updateCourseSection = catchAsync(async (req, res) => {});
+
 //#region Get Course Details By ID
 /**
  * Get course by ID
@@ -171,6 +178,7 @@ export const updateCourseLecture = catchAsync(async (req, res) => {});
 export const getCourseDetails = catchAsync(async (req, res) => {
   // TODO: Implement get course details functionality
   const { id } = req.params;
+  const userId = req.user?._id;
 
   console.log(req.params);
 
@@ -184,7 +192,7 @@ export const getCourseDetails = catchAsync(async (req, res) => {
       select: "title _id",
       populate: {
         path: "lectures",
-        select: "title videoUrl isCompleted _id",
+        select: "title videoUrl _id",
       },
     })
     .populate("instructor")
@@ -196,6 +204,11 @@ export const getCourseDetails = catchAsync(async (req, res) => {
   if (!course) {
     throw new AppError("Course Not Found", 404);
   }
+
+  const userCourseProgress = await CourseProgress.findOne({
+    user: userId,
+    course: id,
+  }).populate("lectureProgress");
 
   return res.status(200).json({
     success: true,
@@ -214,8 +227,10 @@ export const getCourseDetails = catchAsync(async (req, res) => {
           _id: lecture._id,
           title: lecture.title,
           video: lecture.videoUrl || "",
-          isCompleted: lecture.isCompleted,
         })),
+      })),
+      lectureProgress: userCourseProgress.lectureProgress.map((lecture) => ({
+        isCompleted: lecture.isCompleted,
       })),
     },
   });
@@ -309,6 +324,7 @@ export const addLectureToCourseAndSection = catchAsync(async (req, res) => {
 });
 //#endregion
 
+//#region Get Course Lectures
 /**
  * Get course lectures
  * @route GET /api/v1/courses/:courseId/lectures
@@ -316,8 +332,13 @@ export const addLectureToCourseAndSection = catchAsync(async (req, res) => {
 export const getCourseLectures = catchAsync(async (req, res) => {
   // TODO: Implement get course lectures functionality
 });
+//#endregion
 
 //#region Toggle Lecture Completion
+/**
+ * Post Toggle Lecture Complete
+ * @route POST /api/v1/courses/:id/lecture/:lectureId/toggle-complete
+ */
 export const toggleLectureCompletion = catchAsync(async (req, res) => {
   const { isCompleted } = req.body;
   const { id, lectureId } = req.params;

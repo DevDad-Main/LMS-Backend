@@ -1,11 +1,13 @@
 import { User } from "../models/User.model.js";
+import { CourseProgress } from "../models/CourseProgress.model.js";
 import bcrypt from "bcryptjs";
 import generateUserToken from "../utils/generateToken.js";
 import {} from "../utils/cloudinary.js";
 import { catchAsync } from "../middleware/error.middleware.js";
 import { AppError } from "../middleware/error.middleware.js";
+import { Course } from "../models/Course.model.js";
 import crypto from "crypto";
-import { isValidObjectId } from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 import { OAuth2Client } from "google-auth-library";
 import { v7 as uuidv7 } from "uuid";
 
@@ -25,14 +27,62 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
  * @route POST /api/v1/users/google-login
  */
 //#region Create User Account With Google
+// export const createUserAccountWithGoogle = catchAsync(async (req, res) => {
+//   const { credential } = req.body;
+//
+//   if (!req.body.credential) {
+//     throw new AppError("Google credential is required", 400);
+//   }
+//
+//   //Verify Credentials
+//   const ticket = await client.verifyIdToken({
+//     idToken: credential,
+//     audience: process.env.GOOGLE_CLIENT_ID,
+//   });
+//
+//   const payload = ticket.getPayload();
+//   const { email, name } = payload;
+//   // Generate a random password for the user as google users dont need one
+//   const password = uuidv7();
+//   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+//
+//   let user = await User.findOne({ email });
+//
+//   if (!user) {
+//     user = await User.create({
+//       name,
+//       email,
+//       password: hashedPassword,
+//       authProvider: "google",
+//     });
+//   }
+//
+//
+//   const { token } = await generateUserToken(user._id);
+//
+//   return res
+//     .status(201)
+//     .cookie("token", token, options)
+//     .json({
+//       success: true,
+//       token,
+//       user: {
+//         name: user.name,
+//         email: user.email,
+//         authProvider: user.authProvider,
+//       },
+//       message: "Google Login Successful",
+//     });
+// });
+
 export const createUserAccountWithGoogle = catchAsync(async (req, res) => {
   const { credential } = req.body;
 
-  if (!req.body.credential) {
+  if (!credential) {
     throw new AppError("Google credential is required", 400);
   }
 
-  //Verify Credentials
+  // Verify Google credentials
   const ticket = await client.verifyIdToken({
     idToken: credential,
     audience: process.env.GOOGLE_CLIENT_ID,
@@ -40,12 +90,13 @@ export const createUserAccountWithGoogle = catchAsync(async (req, res) => {
 
   const payload = ticket.getPayload();
   const { email, name } = payload;
-  // Generate a random password for the user as google users dont need one
+
+  // Generate a random password for the user
   const password = uuidv7();
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
+  // Find or create user
   let user = await User.findOne({ email });
-
   if (!user) {
     user = await User.create({
       name,
@@ -55,6 +106,48 @@ export const createUserAccountWithGoogle = catchAsync(async (req, res) => {
     });
   }
 
+  // Real course ID
+  const courseId = new mongoose.Types.ObjectId("68d3ce2d7c3efd1997a1d844");
+
+  // Find the course
+  const course = await Course.findById(courseId).populate({
+    path: "sections",
+    select: "title _id",
+    populate: {
+      path: "lectures",
+      select: "title videoUrl isCompleted _id",
+      model: "Lecture", // Explicitly specify the model name
+    },
+  });
+
+  console.log(course);
+  if (!course) {
+    throw new AppError("Course not found", 404);
+  }
+
+  // Initialize lectureProgress array by flattening lectures from all sections
+  const lectureProgress = course.sections.flatMap((section) =>
+    section.lectures.map((lecture) => ({
+      lecture: lecture._id,
+      isCompleted: false,
+      watchTime: 0,
+      lastWatched: new Date(),
+    })),
+  );
+
+  // Check if lectureProgress is populated
+  if (!lectureProgress.length) {
+    console.warn("No lectures found in the course sections");
+  }
+
+  // Create CourseProgress with lectureProgress
+  const courseProgress = await CourseProgress.create({
+    user: user._id,
+    course: course._id,
+    lectureProgress,
+  });
+
+  // Generate JWT token
   const { token } = await generateUserToken(user._id);
 
   return res
@@ -70,8 +163,7 @@ export const createUserAccountWithGoogle = catchAsync(async (req, res) => {
       },
       message: "Google Login Successful",
     });
-});
-//#endregion
+}); //#endregion
 
 /**
  * Create a new user account
