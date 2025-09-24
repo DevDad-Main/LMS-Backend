@@ -125,27 +125,27 @@ export const createUserAccountWithGoogle = catchAsync(async (req, res) => {
     throw new AppError("Course not found", 404);
   }
 
-  // Initialize lectureProgress array by flattening lectures from all sections
-  const lectureProgress = course.sections.flatMap((section) =>
-    section.lectures.map((lecture) => ({
-      lecture: lecture._id,
-      isCompleted: false,
-      watchTime: 0,
-      lastWatched: new Date(),
-    })),
-  );
-
-  // Check if lectureProgress is populated
-  if (!lectureProgress.length) {
-    console.warn("No lectures found in the course sections");
-  }
-
-  // Create CourseProgress with lectureProgress
-  const courseProgress = await CourseProgress.create({
-    user: user._id,
-    course: course._id,
-    lectureProgress,
-  });
+  // // Initialize lectureProgress array by flattening lectures from all sections
+  // const lectureProgress = course.sections.flatMap((section) =>
+  //   section.lectures.map((lecture) => ({
+  //     lecture: lecture._id,
+  //     isCompleted: false,
+  //     watchTime: 0,
+  //     lastWatched: new Date(),
+  //   })),
+  // );
+  //
+  // // Check if lectureProgress is populated
+  // if (!lectureProgress.length) {
+  //   console.warn("No lectures found in the course sections");
+  // }
+  //
+  // // Create CourseProgress with lectureProgress
+  // const courseProgress = await CourseProgress.create({
+  //   user: user._id,
+  //   course: course._id,
+  //   lectureProgress,
+  // });
 
   await User.findByIdAndUpdate(
     user._id,
@@ -258,6 +258,13 @@ export const getEnrolledCourses = catchAsync(async (req, res) => {
   const courseProgresses = await CourseProgress.find({
     user: user._id,
     course: { $in: courseIds },
+  }).populate({
+    path: "course",
+    select: "sections",
+    populate: {
+      path: "sections",
+      select: "lectures",
+    },
   });
 
   return res.status(200).json({

@@ -176,11 +176,8 @@ export const updateCourseSection = catchAsync(async (req, res) => {});
  * @route GET /api/v1/courses/:courseId
  */
 export const getCourseDetails = catchAsync(async (req, res) => {
-  // TODO: Implement get course details functionality
   const { id } = req.params;
   const userId = req.user?._id;
-
-  console.log(req.params);
 
   if (!isValidObjectId(id)) {
     throw new AppError("Invalid Course ID", 404);
@@ -196,7 +193,6 @@ export const getCourseDetails = catchAsync(async (req, res) => {
       },
     })
     .populate("instructor")
-    // .populate("instructor", "name bio email") // Add this
     .select(
       "title description category level price thumbnail sections instructor",
     );
@@ -205,10 +201,13 @@ export const getCourseDetails = catchAsync(async (req, res) => {
     throw new AppError("Course Not Found", 404);
   }
 
+  // Fetch user's completed lectures for this course
   const userCourseProgress = await CourseProgress.findOne({
     user: userId,
     course: id,
-  }).populate("lectureProgress");
+  });
+
+  const completedLectures = userCourseProgress?.completedLectures || [];
 
   return res.status(200).json({
     success: true,
@@ -227,15 +226,13 @@ export const getCourseDetails = catchAsync(async (req, res) => {
           _id: lecture._id,
           title: lecture.title,
           video: lecture.videoUrl || "",
+          isCompleted: completedLectures.includes(lecture._id.toString()), // <-- toggle
         })),
       })),
-      lectureProgress: userCourseProgress.lectureProgress.map((lecture) => ({
-        isCompleted: lecture.isCompleted,
-      })),
     },
+    completedLectures,
   });
-});
-//#endregion
+}); //#endregion
 
 //#region Add Lecture to section and course
 /**
@@ -350,24 +347,38 @@ export const toggleLectureCompletion = catchAsync(async (req, res) => {
     throw new AppError("Invalid Course or Lecture ID", 400);
   }
 
-  const courseProgress = await CourseProgress.findOneAndUpdate(
-    { user: userId, course: id },
-    {
-      $set: {
-        //NOTE: Only setting the right field to completed specified by the filter below
-        "lectureProgress.$[elem].isCompleted": isCompleted,
-        lastAccessed: new Date(),
-      },
-    },
-    {
-      //NOTE: Array Filter we specify to we only update the specific element in the array the lectureId from the front end
-      arrayFilters: [
-        { "elem.lecture": new mongoose.Types.ObjectId(lectureId) },
-      ],
-      new: true, // Return the updated document
-      runValidators: true,
-    },
-  );
+  // const courseProgress = await CourseProgress.findOneAndUpdate(
+  //   { user: userId, course: id },
+  //   {
+  //     $set: {
+  //       //NOTE: Only setting the right field to completed specified by the filter below
+  //       "lectureProgress.$[elem].isCompleted": isCompleted,
+  //       lastAccessed: new Date(),
+  //     },
+  //   },
+  //   {
+  //     //NOTE: Array Filter we specify to we only update the specific element in the array the lectureId from the front end
+  //     arrayFilters: [
+  //       { "elem.lecture": new mongoose.Types.ObjectId(lectureId) },
+  //     ],
+  //     new: true, // Return the updated document
+  //     runValidators: true,
+  //   },
+  // );
+  const courseProgress = await CourseProgress.findOne({
+    user: userId,
+    course: id,
+  });
+
+  if (courseProgress) {
+    await courseProgress.toggleLecture(lectureId);
+  } else {
+    await CourseProgress.create({
+      user: userId,
+      course: id,
+      completedLectures: [lectureId],
+    });
+  }
 
   // console.log("Virtual:", courseProgress.completionPercentageBaby);
   // console.log("With toJSON:", courseProgress.toJSON());

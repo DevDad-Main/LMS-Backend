@@ -36,7 +36,13 @@ const courseProgressSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    lectureProgress: [lectureProgressSchema],
+    completedLectures: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Lecture",
+      },
+    ],
+    // lectureProgress: [lectureProgressSchema],
     lastAccessed: {
       type: Date,
       default: Date.now,
@@ -57,19 +63,28 @@ const courseProgressSchema = new mongoose.Schema(
 // });
 
 courseProgressSchema.virtual("completionPercentage").get(function () {
-  if (!this.course || !this.course.sections) return 0;
+  if (!this.course?.sections || this.course.sections.length === 0) return 0;
 
-  // Flatten all lectures from all sections
-  const totalLectures = this.course.sections.reduce((acc, section) => {
-    return acc + (section.lectures?.length || 0);
-  }, 0);
+  // Flatten all lectures in the course
+  const allLectures = this.course.sections.flatMap(
+    (section) => section.lectures || [],
+  );
+  if (allLectures.length === 0) return 0;
 
-  if (totalLectures === 0) return 0;
-
-  const completed = this.lectureProgress.filter((lp) => lp.isCompleted).length;
-
-  return Math.round((completed / totalLectures) * 100);
+  const completedCount = this.completedLectures.length;
+  return Math.round((completedCount / allLectures.length) * 100);
 });
+//#endregion
+
+//#region Toggle Complete Lecture
+courseProgressSchema.methods.toggleLecture = async function (lectureId) {
+  if (this.completedLectures.includes(lectureId)) {
+    await this.updateOne({ $pull: { completedLectures: lectureId } });
+  } else {
+    await this.updateOne({ $addToSet: { completedLectures: lectureId } });
+  }
+  return this;
+};
 //#endregion
 
 //#region Update last accessed
