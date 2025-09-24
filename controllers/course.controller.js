@@ -163,11 +163,11 @@ export const updateCourseDetails = catchAsync(async (req, res) => {
  */
 export const updateCourseLecture = catchAsync(async (req, res) => {});
 
+//#region Get Course Details By ID
 /**
  * Get course by ID
  * @route GET /api/v1/courses/:courseId
  */
-//#region Get Course Details By ID
 export const getCourseDetails = catchAsync(async (req, res) => {
   // TODO: Implement get course details functionality
   const { id } = req.params;
@@ -184,7 +184,7 @@ export const getCourseDetails = catchAsync(async (req, res) => {
       select: "title _id",
       populate: {
         path: "lectures",
-        select: "title videoUrl _id",
+        select: "title videoUrl isCompleted _id",
       },
     })
     .populate("instructor")
@@ -214,6 +214,7 @@ export const getCourseDetails = catchAsync(async (req, res) => {
           _id: lecture._id,
           title: lecture.title,
           video: lecture.videoUrl || "",
+          isCompleted: lecture.isCompleted,
         })),
       })),
     },
@@ -221,11 +222,12 @@ export const getCourseDetails = catchAsync(async (req, res) => {
 });
 //#endregion
 
+//#region Add Lecture to section and course
 /**
  * Add lecture to course
  * @route POST /api/v1/courses/:courseId/lectures
  */
-export const addLectureToCourse = catchAsync(async (req, res) => {
+export const addLectureToCourseAndSection = catchAsync(async (req, res) => {
   // TODO: Implement add lecture to course functionality
 
   console.log("req.body:", req.body);
@@ -305,6 +307,7 @@ export const addLectureToCourse = catchAsync(async (req, res) => {
     },
   });
 });
+//#endregion
 
 /**
  * Get course lectures
@@ -314,6 +317,33 @@ export const getCourseLectures = catchAsync(async (req, res) => {
   // TODO: Implement get course lectures functionality
 });
 
+//#region Toggle Lecture Completion
+export const toggleLectureCompletion = catchAsync(async (req, res) => {
+  const { isCompleted } = req.body;
+  const { id, lectureId } = req.params;
+
+  console.log(req.body);
+
+  if (!isValidObjectId(id) || !isValidObjectId(lectureId)) {
+    throw new AppError("Invalid Course or Lecture ID", 400);
+  }
+
+  const lecture = await Lecture.findByIdAndUpdate(lectureId, {
+    $set: { isCompleted },
+  });
+
+  const isCompletedString = lecture.isCompleted ? "Completed" : "Not Completed";
+  return res
+    .status(200)
+    .json({ success: true, message: `Course ${isCompletedString}` });
+});
+//#endregion
+
+//#region Add Section to course
+/**
+ * Add Section to course
+ * @route POST /api/v1/courses/:courseId/add-section
+ */
 export const addSection = catchAsync(async (req, res) => {
   console.log("req.body:", req.body);
   console.log("req.params:", req.params);
@@ -357,3 +387,4 @@ export const addSection = catchAsync(async (req, res) => {
 
   res.status(201).json({ success: true, sectionId: section._id });
 });
+//#endregion

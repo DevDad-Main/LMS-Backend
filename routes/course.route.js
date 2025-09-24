@@ -8,8 +8,9 @@ import {
   getMyCreatedCourses,
   updateCourseDetails,
   getCourseDetails,
-  addLectureToCourse,
+  addLectureToCourseAndSection,
   getCourseLectures,
+  toggleLectureCompletion,
 } from "../controllers/course.controller.js";
 import { upload } from "../utils/multer.js";
 
@@ -46,12 +47,17 @@ router
 router.route("/c/:courseId").get(getCourseLectures);
 // .post(restrictTo("instructor"), upload.single("video"), addLectureToCourse);
 
-router.post("/add-lecture", upload.single("videoFile"), addLectureToCourse);
+router.post(
+  "/add-lecture",
+  upload.single("videoFile"),
+  addLectureToCourseAndSection,
+);
 
+//TODO: Add An Update Controller
 router.put(
   "/update-lecture/:editingLectureId",
   upload.single("videoFile"),
-  addLectureToCourse,
+  // addLectureToCourseAndSection,
 );
 
 //TODO: Add Later
@@ -70,7 +76,13 @@ router.post(
   "/:courseId/section/:sectionId/add-lecture",
   isAuthenticated,
   upload.single("videoFile"),
-  addLectureToCourse,
+  addLectureToCourseAndSection,
+);
+
+router.post(
+  "/:id/lecture/:lectureId/toggle-complete",
+  isAuthenticated,
+  toggleLectureCompletion,
 );
 
 router.put(
