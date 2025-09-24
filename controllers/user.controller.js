@@ -147,6 +147,19 @@ export const createUserAccountWithGoogle = catchAsync(async (req, res) => {
     lectureProgress,
   });
 
+  await User.findByIdAndUpdate(
+    user._id,
+    {
+      $addToSet: {
+        enrolledCourses: {
+          course: courseId, // <-- the ObjectId of the course
+          enrolledAt: new Date(),
+        },
+      },
+    },
+    { new: true },
+  );
+
   // Generate JWT token
   const { token } = await generateUserToken(user._id);
 
@@ -163,7 +176,8 @@ export const createUserAccountWithGoogle = catchAsync(async (req, res) => {
       },
       message: "Google Login Successful",
     });
-}); //#endregion
+});
+//#endregion
 
 /**
  * Create a new user account
@@ -223,20 +237,19 @@ export const getEnrolledCourses = catchAsync(async (req, res) => {
     throw new AppError("Invalid User Id", 404);
   }
 
-  //NOTE: Testing purposes only limit it to 5 documents
-  const user = await User.findById(userId)
-    .populate("enrolledCourses")
-    .populate("instructor")
-    // .populate("instructor", "name bio email") // Add this
-    .select(
-      "title description category level price thumbnail sections instructor",
-    )
-    .limit(5);
+  const user = await User.findById(userId).populate({
+    path: "enrolledCourses.course",
+    select: "_id thumbnail title",
+    populate: {
+      path: "instructor",
+      select: "name",
+    },
+  });
+
+  // .populate("instructor", "name bio email") // Add this
   if (!user) {
     throw new AppError("No User Found", 404);
   }
-
-  console.log(user.enrolledCourses);
 
   return res.status(200).json({
     success: true,
