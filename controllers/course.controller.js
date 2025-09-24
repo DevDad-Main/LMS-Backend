@@ -10,7 +10,7 @@ import {
 } from "../utils/cloudinary.js";
 import { catchAsync } from "../middleware/error.middleware.js";
 import { AppError } from "../middleware/error.middleware.js";
-import { isValidObjectId } from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 
 //#region Create New Course
 /**
@@ -342,6 +342,7 @@ export const getCourseLectures = catchAsync(async (req, res) => {
 export const toggleLectureCompletion = catchAsync(async (req, res) => {
   const { isCompleted } = req.body;
   const { id, lectureId } = req.params;
+  const userId = req.user?._id;
 
   console.log(req.body);
 
@@ -349,11 +350,28 @@ export const toggleLectureCompletion = catchAsync(async (req, res) => {
     throw new AppError("Invalid Course or Lecture ID", 400);
   }
 
-  const lecture = await Lecture.findByIdAndUpdate(lectureId, {
-    $set: { isCompleted },
-  });
+  const courseProgress = await CourseProgress.findOneAndUpdate(
+    { user: userId, course: id },
+    {
+      $set: {
+        //NOTE: Only setting the right field to completed specified by the filter below
+        "lectureProgress.$[elem].isCompleted": isCompleted,
+        lastAccessed: new Date(),
+      },
+    },
+    {
+      //NOTE: Array Filter we specify to we only update the specific element in the array the lectureId from the front end
+      arrayFilters: [
+        { "elem.lecture": new mongoose.Types.ObjectId(lectureId) },
+      ],
+      new: true, // Return the updated document
+      runValidators: true,
+    },
+  );
 
-  const isCompletedString = lecture.isCompleted ? "Completed" : "Not Completed";
+  const isCompletedString = courseProgress.isCompleted
+    ? "Completed"
+    : "Not Completed";
   return res
     .status(200)
     .json({ success: true, message: `Course ${isCompletedString}` });
