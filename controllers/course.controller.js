@@ -369,12 +369,16 @@ export const toggleLectureCompletion = catchAsync(async (req, res) => {
     },
   );
 
+  // console.log("Virtual:", courseProgress.completionPercentageBaby);
+  // console.log("With toJSON:", courseProgress.toJSON());
+
   const isCompletedString = courseProgress.isCompleted
     ? "Completed"
     : "Not Completed";
-  return res
-    .status(200)
-    .json({ success: true, message: `Course ${isCompletedString}` });
+  return res.status(200).json({
+    success: true,
+    message: `Course ${isCompletedString}`,
+  });
 });
 //#endregion
 

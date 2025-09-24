@@ -36,12 +36,6 @@ const courseProgressSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    completionPercentage: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 100,
-    },
     lectureProgress: [lectureProgressSchema],
     lastAccessed: {
       type: Date,
@@ -55,18 +49,26 @@ const courseProgressSchema = new mongoose.Schema(
   },
 );
 
-//#region Calculate completion percentage before saving
-courseProgressSchema.pre("save", async function (next) {
-  if (this.lectureProgress.length > 0) {
-    const completedLectures = this.lectureProgress.filter(
-      (lp) => lp.isCompleted,
-    ).length;
-    this.completionPercentage = Math.round(
-      (completedLectures / this.lectureProgress.length) * 100,
-    );
-    this.isCompleted = this.completionPercentage === 100;
-  }
-  next();
+//#region Calculate Completion Percentage Virtual
+// courseProgressSchema.virtual("completionPercentage").get(function () {
+//   if (!this.lectureProgress || this.lectureProgress.length === 0) return 0;
+//   const completed = this.lectureProgress.filter((lp) => lp.isCompleted).length;
+//   return Math.round((completed / this.lectureProgress.length) * 100);
+// });
+
+courseProgressSchema.virtual("completionPercentage").get(function () {
+  if (!this.course || !this.course.sections) return 0;
+
+  // Flatten all lectures from all sections
+  const totalLectures = this.course.sections.reduce((acc, section) => {
+    return acc + (section.lectures?.length || 0);
+  }, 0);
+
+  if (totalLectures === 0) return 0;
+
+  const completed = this.lectureProgress.filter((lp) => lp.isCompleted).length;
+
+  return Math.round((completed / totalLectures) * 100);
 });
 //#endregion
 

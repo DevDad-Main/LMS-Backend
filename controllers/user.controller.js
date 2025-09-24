@@ -251,8 +251,18 @@ export const getEnrolledCourses = catchAsync(async (req, res) => {
     throw new AppError("No User Found", 404);
   }
 
+  const courseIds = user.enrolledCourses.map((course) => {
+    return course.course._id;
+  });
+
+  const courseProgresses = await CourseProgress.find({
+    user: user._id,
+    course: { $in: courseIds },
+  });
+
   return res.status(200).json({
     success: true,
+    coursesProgress: courseProgresses,
     enrolledCourses: user.enrolledCourses,
     message: "User Courses Fetched",
   });
