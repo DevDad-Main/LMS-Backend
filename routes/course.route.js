@@ -11,6 +11,7 @@ import {
   addLectureToCourseAndSection,
   getCourseLectures,
   toggleLectureCompletion,
+  updateCourseSection,
 } from "../controllers/course.controller.js";
 import { upload } from "../utils/multer.js";
 
@@ -64,7 +65,7 @@ router.put(
 // // Section routes
 router.post(
   "/:courseId/add-section",
-  isAuthenticated,
+
   upload.none(),
   addSection,
 );
@@ -74,23 +75,30 @@ router.post(
 // Lecture routes
 router.post(
   "/:courseId/section/:sectionId/add-lecture",
-  isAuthenticated,
+
   upload.single("videoFile"),
   addLectureToCourseAndSection,
 );
 
 router.post(
   "/:id/lecture/:lectureId/toggle-complete",
-  isAuthenticated,
+
   toggleLectureCompletion,
 );
 
 router.put(
   "/:courseId/update-lecture/:lectureId",
-  isAuthenticated,
+
   upload.single("videoFile"),
   // updateLecture,
 );
+
+router.post(
+  "/:savedCourseId/update-section/:editingSectionId",
+  upload.none(),
+  updateCourseSection,
+);
+
 // router.delete("/:courseId/delete-lecture/:lectureId", protect, deleteLecture);
 
 export default router;

@@ -31,18 +31,8 @@ export const createNewCourse = catchAsync(async (req, res) => {
     learnableSkills,
   } = req.body;
 
-  console.log(req.body);
-
-  let parsedRequirements = [];
-  let parsedLearnableSkills = [];
-  try {
-    parsedRequirements = JSON.parse(requirements);
-    parsedLearnableSkills = JSON.parse(learnableSkills);
-  } catch (error) {
-    return res
-      .status(400)
-      .json({ message: "Invalid requirements or learnableSkills format" });
-  }
+  let parsedRequirements = JSON.parse(requirements) || [];
+  let parsedLearnableSkills = JSON.parse(learnableSkills) || [];
 
   const thumbnail = req.file;
 
@@ -62,15 +52,17 @@ export const createNewCourse = catchAsync(async (req, res) => {
   console.log(thumbnail);
   console.log(thumbnail.buffer);
 
-  const result = await uploadBufferToCloudinary(
-    thumbnail.buffer,
-    course.folderId,
-  );
+  let result;
+  try {
+    result = await uploadBufferToCloudinary(thumbnail.buffer, course.folderId);
 
-  console.log("Result: ", result);
+    console.log("Result: ", result);
 
-  if (!result) {
-    throw new AppError("Can't upload thumbnail to cloundinary", 400);
+    if (!result) {
+      throw new AppError("Can't upload thumbnail to cloundinary", 400);
+    }
+  } catch (error) {
+    throw new AppError(error.message, error.status);
   }
 
   course.thumbnail = result.secure_url;
@@ -209,7 +201,22 @@ export const updateCourseLecture = catchAsync(async (req, res) => {});
  * Update course details
  * @route PUT /api/v1/course/update-lecture/${editingLectureId}
  */
-export const updateCourseSection = catchAsync(async (req, res) => {});
+export const updateCourseSection = catchAsync(async (req, res) => {
+  const { savedCourseId, editingSectionId } = req.params;
+  const { title } = req.body;
+
+  if (!isValidObjectId(savedCourseId) || !isValidObjectId(editingSectionId)) {
+    throw new AppError("Course ID or Section ID are not valid ID's", 400);
+  }
+
+  const section = await Section.findByIdAndUpdate(editingSectionId, {
+    $set: { title },
+  });
+
+  return res
+    .status(200)
+    .json({ success: true, section, message: "Section Updated Successfully" });
+});
 
 //#region Get Course Details By ID
 /**
