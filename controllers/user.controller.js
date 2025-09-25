@@ -107,7 +107,7 @@ export const createUserAccountWithGoogle = catchAsync(async (req, res) => {
   }
 
   // Real course ID
-  const courseId = new mongoose.Types.ObjectId("68d3ce2d7c3efd1997a1d844");
+  const courseId = new mongoose.Types.ObjectId("68d5418149b6fb48a22d8344");
 
   // Find the course
   const course = await Course.findById(courseId).populate({
@@ -125,34 +125,12 @@ export const createUserAccountWithGoogle = catchAsync(async (req, res) => {
     throw new AppError("Course not found", 404);
   }
 
-  // // Initialize lectureProgress array by flattening lectures from all sections
-  // const lectureProgress = course.sections.flatMap((section) =>
-  //   section.lectures.map((lecture) => ({
-  //     lecture: lecture._id,
-  //     isCompleted: false,
-  //     watchTime: 0,
-  //     lastWatched: new Date(),
-  //   })),
-  // );
-  //
-  // // Check if lectureProgress is populated
-  // if (!lectureProgress.length) {
-  //   console.warn("No lectures found in the course sections");
-  // }
-  //
-  // // Create CourseProgress with lectureProgress
-  // const courseProgress = await CourseProgress.create({
-  //   user: user._id,
-  //   course: course._id,
-  //   lectureProgress,
-  // });
-
   await User.findByIdAndUpdate(
     user._id,
     {
       $addToSet: {
         enrolledCourses: {
-          course: courseId, // <-- the ObjectId of the course
+          course: course._id, // <-- the ObjectId of the course
           enrolledAt: new Date(),
         },
       },

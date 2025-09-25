@@ -12,6 +12,7 @@ import {
   getCourseLectures,
   toggleLectureCompletion,
   updateCourseSection,
+  updateCourseLecture,
 } from "../controllers/course.controller.js";
 import { upload } from "../utils/multer.js";
 
@@ -87,10 +88,9 @@ router.post(
 );
 
 router.put(
-  "/:courseId/update-lecture/:lectureId",
-
+  "/:savedCourseId/update-lecture/:editingLectureId",
   upload.single("videoFile"),
-  // updateLecture,
+  updateCourseLecture,
 );
 
 router.post(

@@ -133,7 +133,6 @@ export const updateCourseDetails = catchAsync(async (req, res) => {
     requirements,
     learnableSkills,
     updateThumbnail,
-    currentThumbnail,
     updateRequirements,
     updateLearnableSkills,
   } = req.body;
@@ -195,8 +194,53 @@ export const updateCourseDetails = catchAsync(async (req, res) => {
  * Update course details
  * @route PUT /api/v1/course/update-lecture/${editingLectureId}
  */
-export const updateCourseLecture = catchAsync(async (req, res) => {});
+export const updateCourseLecture = catchAsync(async (req, res) => {
+  const { savedCourseId, editingLectureId } = req.params;
+  const { title, updateVideo } = req.body;
 
+  console.log("Request body:", req.body);
+  console.log("Uploaded file:", req.file);
+
+  const lectureFolderId = await Lecture.findById(editingLectureId);
+
+  const update = {};
+  if (title) update.title = title;
+
+  if (updateVideo === "true" && req.file) {
+    const folderId =
+      lectureFolderId.folderId || `lecture-${lectureFolderId._id}`;
+    const result = await uploadBufferToCloudinary(
+      req.file.buffer,
+      folderId,
+      "video",
+    );
+
+    if (lectureFolderId.videoUrl) {
+      const oldPublicId = getPublicIdFromUrl(lectureFolderId.videoUrl);
+      await deleteImageFromCloudinary(oldPublicId, "video");
+    }
+
+    update.videoUrl = result.secure_url;
+  } else if (!updateVideo || updateVideo === "false") {
+    update.videoUrl = lectureFolderId.videoUrl;
+  }
+
+  const lecture = await Lecture.findByIdAndUpdate(
+    editingLectureId,
+    { $set: update },
+    { new: true, runValidators: true },
+  );
+
+  if (!lecture) {
+    throw new AppError("Course Not Found", 404);
+  }
+
+  return res
+    .status(200)
+    .json({ success: true, lecture, message: "Lecture updated successfully" });
+});
+
+//#region Update Course Section
 /**
  * Update course details
  * @route PUT /api/v1/course/update-lecture/${editingLectureId}
@@ -217,6 +261,7 @@ export const updateCourseSection = catchAsync(async (req, res) => {
     .status(200)
     .json({ success: true, section, message: "Section Updated Successfully" });
 });
+//#endregion
 
 //#region Get Course Details By ID
 /**
@@ -403,24 +448,6 @@ export const toggleLectureCompletion = catchAsync(async (req, res) => {
     throw new AppError("Invalid Course or Lecture ID", 400);
   }
 
-  // const courseProgress = await CourseProgress.findOneAndUpdate(
-  //   { user: userId, course: id },
-  //   {
-  //     $set: {
-  //       //NOTE: Only setting the right field to completed specified by the filter below
-  //       "lectureProgress.$[elem].isCompleted": isCompleted,
-  //       lastAccessed: new Date(),
-  //     },
-  //   },
-  //   {
-  //     //NOTE: Array Filter we specify to we only update the specific element in the array the lectureId from the front end
-  //     arrayFilters: [
-  //       { "elem.lecture": new mongoose.Types.ObjectId(lectureId) },
-  //     ],
-  //     new: true, // Return the updated document
-  //     runValidators: true,
-  //   },
-  // );
   const courseProgress = await CourseProgress.findOne({
     user: userId,
     course: id,
