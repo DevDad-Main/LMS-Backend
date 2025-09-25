@@ -7,10 +7,14 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export const uploadBufferToCloudinary = async (buffer, folderId) => {
+export const uploadBufferToCloudinary = async (
+  buffer,
+  folderId,
+  resourceType = "image",
+) => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder: `LearnHub/${folderId}`, resource_type: "auto" },
+      { folder: `LearnHub/${folderId}`, resource_type: resourceType },
       (error, result) => {
         if (result) resolve(result);
         else reject(error);
@@ -23,11 +27,14 @@ export const uploadBufferToCloudinary = async (buffer, folderId) => {
 export const getPublicIdFromUrl = (url) => {
   const parts = url.split("/");
   const fileWithExtension = parts.pop(); // 'filename.jpg'
-  const folder = parts.slice(-2).join("/"); // 'Grocerly/folderId'
+  const folder = parts.slice(-2).join("/"); // 'LearnHub/folderId'
   const publicId = `${folder}/${fileWithExtension.split(".")[0]}`;
   return publicId;
 };
 
-export const deleteImageFromCloudinary = async (publicId) => {
-  return cloudinary.uploader.destroy(publicId, { resource_type: "auto" });
+export const deleteImageFromCloudinary = async (
+  publicId,
+  resourceType = "image",
+) => {
+  return cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
 };

@@ -130,51 +130,68 @@ export const getMyCreatedCourses = catchAsync(async (req, res) => {
  * @route PATCH /api/v1/courses/:courseId
  */
 export const updateCourseDetails = catchAsync(async (req, res) => {
-  const { title, description, category, level, price, updateThumbnail } =
-    req.body;
   const { id } = req.params;
+  const {
+    title,
+    subtitle,
+    description,
+    category,
+    level,
+    price,
+    requirements,
+    learnableSkills,
+    updateThumbnail,
+    currentThumbnail,
+    updateRequirements,
+    updateLearnableSkills,
+  } = req.body;
 
   if (!isValidObjectId(id)) {
     throw new AppError("Invalid Course ID", 404);
   }
 
-  const thumbnailFile = req.file;
+  const courseFolderId = await Course.findById(id);
 
-  const course = await Course.findById(id);
-  if (!course) {
-    throw new AppError("Course not found", 404);
+  const update = {};
+  if (title) update.title = title;
+  if (subtitle) update.subtitle = subtitle;
+  if (description) update.description = description;
+  if (category) update.category = category;
+  if (level) update.level = level;
+  if (price) update.price = parseFloat(price);
+
+  // Handle array fields
+  if (updateRequirements === "true" && requirements) {
+    update.requirements = JSON.parse(requirements);
+  }
+  if (updateLearnableSkills === "true" && learnableSkills) {
+    update.learnableSkills = JSON.parse(learnableSkills);
   }
 
-  const updateData = {
-    title,
-    description,
-    category,
-    level,
-    price,
-  };
-
   let thumbnail;
-  if (updateThumbnail === "true" && thumbnailFile) {
-    // Upload new thumbnail and delete old one
-    const folderId = course.folderId || `course-${courseId}`;
-    const result = await uploadBufferToCloudinary(
-      thumbnailFile.buffer,
-      folderId,
-    );
+  if (updateThumbnail === "true" && req.file) {
+    const folderId = courseFolderId.folderId || `course-${courseFolderId._id}`;
+    const result = await uploadBufferToCloudinary(req.file.buffer, folderId);
 
-    if (course.thumbnail) {
-      const oldPublicId = getPublicIdFromUrl(course.thumbnail);
+    if (courseFolderId.thumbnail) {
+      const oldPublicId = getPublicIdFromUrl(courseFolderId.thumbnail);
       await deleteImageFromCloudinary(oldPublicId);
     }
 
-    thumbnail = result.secure_url;
+    update.thumbnail = result.secure_url;
   } else if (!updateThumbnail || updateThumbnail === "false") {
-    // Keep existing thumbnail
-    thumbnail = course.thumbnail;
+    update.thumbnail = courseFolderId.thumbnail;
   }
 
-  Object.assign(course, updateData);
-  await course.save();
+  const course = await Course.findByIdAndUpdate(
+    id,
+    { $set: update },
+    { new: true, runValidators: true },
+  );
+
+  if (!course) {
+    throw new AppError("Course Not Found", 404);
+  }
 
   return res
     .status(200)
@@ -218,7 +235,7 @@ export const getCourseDetails = catchAsync(async (req, res) => {
     })
     .populate("instructor")
     .select(
-      "title description category level price thumbnail sections instructor",
+      "title description category level price thumbnail sections instructor subtitle requirements learnableSkills",
     );
 
   if (!course) {
@@ -238,10 +255,13 @@ export const getCourseDetails = catchAsync(async (req, res) => {
     course: {
       _id: course._id,
       title: course.title,
+      subtitle: course.subtitle,
       description: course.description,
       category: course.category,
       level: course.level,
       price: course.price,
+      requirements: course.requirements,
+      learnableSkills: course.learnableSkills,
       thumbnail: course.thumbnail || "",
       sections: course.sections.map((section) => ({
         _id: section._id,
@@ -305,7 +325,11 @@ export const addLectureToCourseAndSection = catchAsync(async (req, res) => {
   let duration = 0;
   if (type === "Video" && videoFile) {
     const folderId = course.folderId || `course-${courseId}`;
-    const result = await uploadBufferToCloudinary(videoFile.buffer, folderId);
+    const result = await uploadBufferToCloudinary(
+      videoFile.buffer,
+      folderId,
+      "video",
+    );
     videoUrl = result.secure_url;
     duration = result.duration || 0;
   }
