@@ -20,17 +20,41 @@ import mongoose, { isValidObjectId } from "mongoose";
 export const createNewCourse = catchAsync(async (req, res) => {
   //TODO: Destructure req.body as its sent as whole object and JSON.parse sections field
 
-  const { title, description, category, level, price } = req.body;
+  const {
+    title,
+    subtitle,
+    description,
+    category,
+    level,
+    price,
+    requirements,
+    learnableSkills,
+  } = req.body;
+
   console.log(req.body);
+
+  let parsedRequirements = [];
+  let parsedLearnableSkills = [];
+  try {
+    parsedRequirements = JSON.parse(requirements);
+    parsedLearnableSkills = JSON.parse(learnableSkills);
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: "Invalid requirements or learnableSkills format" });
+  }
 
   const thumbnail = req.file;
 
   const course = await Course.create({
     title,
+    subtitle,
     description,
     category,
     level,
-    price,
+    price: parseFloat(price),
+    requirements: parsedRequirements,
+    learnableSkills: parsedLearnableSkills,
     instructor: req.user?._id,
     courseOwner: req.user?._id,
   });
@@ -232,7 +256,8 @@ export const getCourseDetails = catchAsync(async (req, res) => {
     },
     completedLectures,
   });
-}); //#endregion
+});
+//#endregion
 
 //#region Add Lecture to section and course
 /**

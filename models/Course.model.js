@@ -9,16 +9,18 @@ const courseSchema = new mongoose.Schema(
       trim: true,
       maxLength: [100, "Course title cannot exceed 100 characters"],
     },
-    // subtitle: {
-    //   type: String,
-    //   trim: true,
-    //   maxLength: [200, "Course subtitle cannot exceed 200 characters"],
-    // },
+    subtitle: {
+      type: String,
+      trim: true,
+      // maxLength: [200, "Course subtitle cannot exceed 200 characters"],
+    },
     description: {
       type: String,
       trim: true,
-      maxLength: [200, "Course subtitle cannot exceed 200 characters"],
+      // maxLength: [200, "Course subtitle cannot exceed 200 characters"],
     },
+    learnableSkills: { type: Array, required: true },
+    requirements: { type: Array, required: true },
     category: {
       type: String,
       enum: [
