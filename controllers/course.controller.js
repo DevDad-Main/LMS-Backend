@@ -190,6 +190,7 @@ export const updateCourseDetails = catchAsync(async (req, res) => {
 });
 //#endregion
 
+//#region Update Course Lecture
 /**
  * Update course details
  * @route PUT /api/v1/course/update-lecture/${editingLectureId}
@@ -239,6 +240,7 @@ export const updateCourseLecture = catchAsync(async (req, res) => {
     .status(200)
     .json({ success: true, lecture, message: "Lecture updated successfully" });
 });
+//#endregion
 
 //#region Update Course Section
 /**
@@ -282,12 +284,12 @@ export const getCourseDetails = catchAsync(async (req, res) => {
       select: "title _id",
       populate: {
         path: "lectures",
-        select: "title videoUrl _id",
+        select: "title videoUrl _id duration",
       },
     })
     .populate("instructor")
     .select(
-      "title description category level price thumbnail sections instructor subtitle requirements learnableSkills",
+      "title description category level price thumbnail sections instructor subtitle requirements learnableSkills enrolledStudents lastUpdated",
     );
 
   if (!course) {
@@ -312,6 +314,10 @@ export const getCourseDetails = catchAsync(async (req, res) => {
       category: course.category,
       level: course.level,
       price: course.price,
+      instructor: course.instructor,
+      enrolledStudents: course.enrolledStudents.length,
+      duration: course.duration, // Explicitly call virtual
+      lastUpdated: course.lastUpdated,
       requirements: course.requirements,
       learnableSkills: course.learnableSkills,
       thumbnail: course.thumbnail || "",
@@ -322,6 +328,7 @@ export const getCourseDetails = catchAsync(async (req, res) => {
           _id: lecture._id,
           title: lecture.title,
           video: lecture.videoUrl || "",
+          duration: lecture.duration,
           isCompleted: completedLectures.includes(lecture._id.toString()), // <-- toggle
         })),
       })),

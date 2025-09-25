@@ -92,6 +92,7 @@ const courseSchema = new mongoose.Schema(
       ref: "User",
       required: [true, "Course Owner is required"],
     },
+    lastUpdated: { type: Date, default: Date.now },
   },
   {
     timestamps: true,
@@ -105,6 +106,20 @@ courseSchema.virtual("averageRating").get(function () {
   return 0; // Placeholder until review system is implemented
 });
 //#endregion
+
+courseSchema.virtual("duration").get(function () {
+  if (!this.sections || this.sections?.length === 0) return 0;
+
+  let total = 0;
+  for (const section of this.sections) {
+    if (section.lectures) {
+      for (const lecture of section.lectures) {
+        total += lecture.duration || 0;
+      }
+    }
+  }
+  return total;
+});
 
 //#region Update total lectures count when lectures are modified
 courseSchema.pre("save", function (next) {
