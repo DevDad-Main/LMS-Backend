@@ -1,5 +1,9 @@
 import express from "express";
-import { isAuthenticated, restrictTo } from "../middleware/auth.middleware.js";
+import {
+  isAuthenticated,
+  isInstructorAuthenticated,
+  restrictTo,
+} from "../middleware/auth.middleware.js";
 import {
   createNewCourse,
   addSection,
@@ -23,7 +27,7 @@ router.get("/published", getPublishedCourses);
 router.get("/search", searchCourses);
 
 // Protected routes
-router.use(isAuthenticated);
+// router.use(isAuthenticated);
 
 // Course management
 // router.route("/").get(restrictTo("instructor"), getMyCreatedCourses);
@@ -38,7 +42,11 @@ router
 router
   .route("/c/:id")
   .get(getCourseDetails)
-  .put(upload.single("thumbnail"), updateCourseDetails);
+  .put(
+    upload.single("thumbnail"),
+    isInstructorAuthenticated,
+    updateCourseDetails,
+  );
 // .patch(
 //   restrictTo("instructor"),
 //   upload.single("thumbnail"),

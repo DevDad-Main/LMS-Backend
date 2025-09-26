@@ -9,6 +9,8 @@ import {
 import {
   createInstructorAccountWithGoogle,
   authenticateInstructor,
+  getInstructorsCourses,
+  signOutInstructor,
 } from "../controllers/instructor.controller.js";
 
 const router = express.Router();
@@ -18,6 +20,8 @@ router.get(
   isInstructorAuthenticated,
   authenticateInstructor,
 );
+router.get("/signout", signOutInstructor);
+router.get("/courses", isInstructorAuthenticated, getInstructorsCourses);
 
 router.post("/google-login", createInstructorAccountWithGoogle);
 

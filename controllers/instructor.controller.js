@@ -25,11 +25,11 @@ const options = {
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 //#endregion
 
+//#region Create User Account With Google
 /**
  * Create a new instructor account via google
  * @route POST /api/v1/instructor/google-login
  */
-//#region Create User Account With Google
 export const createInstructorAccountWithGoogle = catchAsync(
   async (req, res) => {
     const { credential } = req.body;
@@ -122,11 +122,24 @@ export const createInstructorAccountWithGoogle = catchAsync(
 );
 //#endregion
 
+//#region Instructor SignOut
+/**
+ * Sign out instructor and clear cookie
+ * @route GET /api/v1/instructor/signout
+ */
+export const signOutInstructor = catchAsync(async (_, res) => {
+  return res
+    .status(200)
+    .clearCookie("token", options)
+    .json({ success: true, message: "Instructor Signed Out" });
+});
+//#endregion
+
+//#region Instructor Authentication
 /**
  * Authenticate user and get token to keep user logged in
  * @route POST /api/v1/users/signin
  */
-//#region User Authentication
 export const authenticateInstructor = catchAsync(async (req, res) => {
   const instructorId = req.user?._id;
 
@@ -134,16 +147,41 @@ export const authenticateInstructor = catchAsync(async (req, res) => {
     throw new AppError("Invalid Instructor Id", 400);
   }
 
-  const instructor = await Instructor.findById(instructorId).select("_id");
+  const instructor = await Instructor.findById(instructorId);
 
   if (!instructor) {
-    throw new AppError("User Not Found", 400);
+    throw new AppError("Instructor Not Found", 400);
   }
 
   return res.status(200).json({
     success: true,
     instructor,
-    message: "User Passed Authentication Check",
+    message: "Instructor Passed Authentication Check",
+  });
+});
+//#endregion
+
+//#region Get Instructors Courses
+export const getInstructorsCourses = catchAsync(async (req, res) => {
+  const instructorId = req.user?._id;
+
+  if (!isValidObjectId(instructorId)) {
+    throw new AppError("Invalid Instructor ID", 400);
+  }
+
+  const instructor =
+    await Instructor.findById(instructorId).populate("createdCourses");
+
+  if (!instructor) {
+    throw new AppError("No courses found for this instructor", 404);
+  }
+
+  console.log(instructor.createdCourses);
+
+  return res.status(200).json({
+    success: true,
+    courses: instructor.createdCourses,
+    message: "Courses Fetched Successful",
   });
 });
 //#endregion

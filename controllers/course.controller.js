@@ -111,7 +111,7 @@ export const getMyCreatedCourses = catchAsync(async (req, res) => {
     throw new AppError("Not a valid ID", 404);
   }
 
-  const courses = await Course.find({ courseOwner: userId }).select(
+  const courses = await Course.find({ instructor: userId }).select(
     "title description category level price thumbnail sections instructor",
   );
 
