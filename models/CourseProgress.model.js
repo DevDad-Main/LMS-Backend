@@ -88,10 +88,10 @@ courseProgressSchema.methods.toggleLecture = async function (lectureId) {
 //#endregion
 
 //#region Update last accessed
-courseProgressSchema.methods.updateLastAccessed = function () {
+courseProgressSchema.virtual("lastAccessedCourse").get(function () {
   this.lastAccessed = Date.now();
   return this.save({ validateBeforeSave: false });
-};
+});
 //#endregion
 
 export const CourseProgress = mongoose.model(

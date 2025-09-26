@@ -144,10 +144,12 @@ courseSchema.virtual("duration").get(function () {
 });
 //#endregion
 
+//#region Limit Array Validation
 function limitArray(limit) {
   return function (value) {
     return value.length <= limit;
   };
 }
+//#endregion
 
 export const Course = mongoose.model("Course", courseSchema);

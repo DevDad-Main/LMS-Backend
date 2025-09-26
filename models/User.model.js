@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: {
-        values: ["student", "instructor", "admin"],
+        values: ["student"],
         message: "Please select a valid role",
       },
       default: "student",
@@ -38,10 +38,6 @@ const userSchema = new mongoose.Schema(
     avatar: {
       type: String,
       default: "default-avatar.png",
-    },
-    bio: {
-      type: String,
-      maxLength: [200, "Bio cannot exceed 200 characters"],
     },
     enrolledCourses: [
       {
@@ -53,12 +49,6 @@ const userSchema = new mongoose.Schema(
           type: Date,
           default: Date.now,
         },
-      },
-    ],
-    createdCourses: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Course",
       },
     ],
     resetPasswordToken: String,
