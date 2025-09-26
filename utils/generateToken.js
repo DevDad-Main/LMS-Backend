@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { User } from "../models/User.model.js";
+import { Instructor } from "../models/Instructor.model.js";
 import mongoose, { isValidObjectId } from "mongoose";
 import { AppError } from "../middleware/error.middleware.js";
 
@@ -26,21 +27,25 @@ export default async function generateUserToken(userId) {
 }
 //#endregion
 
-// export const generateToken = (res, user, message) => {
-//   const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-//     expiresIn: "1d",
-//   });
-//
-//   return res
-//     .status(200)
-//     .cookie("token", token, {
-//       httpOnly: true,
-//       sameSite: "strict",
-//       maxAge: 24 * 60 * 60 * 1000, // 1 day
-//     })
-//     .json({
-//       success: true,
-//       message,
-//       user,
-//     });
-// };
+//#region Generate Token
+export async function generateInstructorToken(instructorId) {
+  try {
+    if (!isValidObjectId(instructorId)) {
+      throw new AppError("Invalid Instructor Id", 404);
+    }
+    const instructor = await Instructor.findById(instructorId).select("_id");
+
+    if (!instructor) {
+      throw new AppError("User not found", 404);
+    }
+
+    const token = jwt.sign({ _id: instructor._id }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
+
+    return { token };
+  } catch (error) {
+    throw new AppError(error.message, 500);
+  }
+}
+//#endregion

@@ -36,9 +36,8 @@ const instructorSchema = new mongoose.Schema(
     },
     expertise: {
       type: Array,
-      required: true,
     },
-    profession: { type: String, required: true },
+    profession: { type: String },
     avatar: {
       type: String,
       default: "default-avatar.png",
@@ -61,3 +60,5 @@ const instructorSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   },
 );
+
+export const Instructor = mongoose.model("Instructor", instructorSchema);

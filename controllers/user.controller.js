@@ -1,8 +1,12 @@
 import { User } from "../models/User.model.js";
+import { Instructor } from "../models/Instructor.model.js";
 import { CourseProgress } from "../models/CourseProgress.model.js";
 import bcrypt from "bcryptjs";
 import generateUserToken from "../utils/generateToken.js";
-import {} from "../utils/cloudinary.js";
+import {
+  uploadBufferToCloudinary,
+  deleteImageFromCloudinary,
+} from "../utils/cloudinary.js";
 import { catchAsync } from "../middleware/error.middleware.js";
 import { AppError } from "../middleware/error.middleware.js";
 import { Course } from "../models/Course.model.js";
@@ -94,6 +98,14 @@ export const createUserAccountWithGoogle = catchAsync(async (req, res) => {
   // Generate a random password for the user
   const password = uuidv7();
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+
+  const instructor = await Instructor.findOne({ email });
+  if (instructor) {
+    throw new AppError(
+      "A User already exists with that email. Please choose another",
+      400,
+    );
+  }
 
   // Find or create user
   let user = await User.findOne({ email });

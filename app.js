@@ -9,6 +9,7 @@ import xss from "xss-clean";
 import hpp from "hpp";
 import rateLimit from "express-rate-limit";
 import userRoute from "./routes/user.route.js";
+import instructorRoute from "./routes/instructor.route.js";
 import courseRoute from "./routes/course.route.js";
 import mediaRoute from "./routes/media.route.js";
 import purchaseRoute from "./routes/purchaseCourse.route.js";
@@ -70,6 +71,7 @@ app.use(
 //#region API Routes
 app.use("/api/v1/media", mediaRoute);
 app.use("/api/v1/users", userRoute);
+app.use("/api/v1/instructor", instructorRoute);
 app.use("/api/v1/course", courseRoute);
 app.use("/api/v1/purchase", purchaseRoute);
 app.use("/api/v1/progress", courseProgressRoute);
