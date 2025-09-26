@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { v7 as uuidv7 } from "uuid";
 
+//#region Course Schema
 const courseSchema = new mongoose.Schema(
   {
     title: {
@@ -19,8 +20,27 @@ const courseSchema = new mongoose.Schema(
       trim: true,
       // maxLength: [200, "Course subtitle cannot exceed 200 characters"],
     },
-    learnableSkills: { type: Array, required: true },
-    requirements: { type: Array, required: true },
+    learnableSkills: {
+      type: Array,
+      required: true,
+      validate: [limitArray(6), "Cannot have more than 6 learnable skills"],
+    },
+    requirements: {
+      type: Array,
+      required: true,
+      validate: [limitArray(6), "Cannot have more than 6 requirements"],
+    },
+    tags: {
+      type: Array,
+      required: true,
+      validate: [limitArray(5), "Cannot have more than 5 tags"],
+    },
+    languages: {
+      type: Array,
+      required: true,
+      max: 5,
+      validate: [limitArray(5), "Cannot have more than 5 languages"],
+    },
     category: {
       type: String,
       enum: [
@@ -100,6 +120,7 @@ const courseSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   },
 );
+//#endregion
 
 //#region Virtual field for average rating (to be implemented with reviews)
 courseSchema.virtual("averageRating").get(function () {
@@ -107,6 +128,7 @@ courseSchema.virtual("averageRating").get(function () {
 });
 //#endregion
 
+//#region Course Duration Virtual
 courseSchema.virtual("duration").get(function () {
   if (!this.sections || this.sections?.length === 0) return 0;
 
@@ -120,18 +142,12 @@ courseSchema.virtual("duration").get(function () {
   }
   return total;
 });
-
-//#region Update total lectures count when lectures are modified
-courseSchema.pre("save", function (next) {
-  // if (this.lectures) {
-  //   this.totalLectures = this.lectures.length;
-  // }
-
-  if (!this.folderId) {
-    this.folderId = uuidv7();
-  }
-  next();
-});
 //#endregion
+
+function limitArray(limit) {
+  return function (value) {
+    return value.length <= limit;
+  };
+}
 
 export const Course = mongoose.model("Course", courseSchema);

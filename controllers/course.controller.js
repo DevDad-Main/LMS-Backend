@@ -29,10 +29,14 @@ export const createNewCourse = catchAsync(async (req, res) => {
     price,
     requirements,
     learnableSkills,
+    tags,
+    languages,
   } = req.body;
 
   let parsedRequirements = JSON.parse(requirements) || [];
   let parsedLearnableSkills = JSON.parse(learnableSkills) || [];
+  let parsedTags = JSON.parse(tags) || [];
+  let parsedLanguages = JSON.parse(languages) || [];
 
   const thumbnail = req.file;
 
@@ -45,6 +49,8 @@ export const createNewCourse = catchAsync(async (req, res) => {
     price: parseFloat(price),
     requirements: parsedRequirements,
     learnableSkills: parsedLearnableSkills,
+    tags: parsedTags,
+    languages: parsedLanguages,
     instructor: req.user?._id,
     courseOwner: req.user?._id,
   });
@@ -132,10 +138,16 @@ export const updateCourseDetails = catchAsync(async (req, res) => {
     price,
     requirements,
     learnableSkills,
+    tags,
+    languages,
     updateThumbnail,
     updateRequirements,
     updateLearnableSkills,
+    updateTags,
+    updateLanguages,
   } = req.body;
+
+  console.log(req.body);
 
   if (!isValidObjectId(id)) {
     throw new AppError("Invalid Course ID", 404);
@@ -157,6 +169,12 @@ export const updateCourseDetails = catchAsync(async (req, res) => {
   }
   if (updateLearnableSkills === "true" && learnableSkills) {
     update.learnableSkills = JSON.parse(learnableSkills);
+  }
+  if (updateTags === "true" && tags) {
+    update.tags = JSON.parse(tags);
+  }
+  if (updateLanguages === "true" && languages) {
+    update.languages = JSON.parse(languages);
   }
 
   let thumbnail;
@@ -289,7 +307,7 @@ export const getCourseDetails = catchAsync(async (req, res) => {
     })
     .populate("instructor")
     .select(
-      "title description category level price thumbnail sections instructor subtitle requirements learnableSkills enrolledStudents lastUpdated",
+      "title description category level price thumbnail sections instructor subtitle requirements learnableSkills enrolledStudents lastUpdated tags languages",
     );
 
   if (!course) {
@@ -320,6 +338,8 @@ export const getCourseDetails = catchAsync(async (req, res) => {
       lastUpdated: course.lastUpdated,
       requirements: course.requirements,
       learnableSkills: course.learnableSkills,
+      tags: course.tags,
+      languages: course.languages,
       thumbnail: course.thumbnail || "",
       sections: course.sections.map((section) => ({
         _id: section._id,
