@@ -121,3 +121,29 @@ export const createInstructorAccountWithGoogle = catchAsync(
   },
 );
 //#endregion
+
+/**
+ * Authenticate user and get token to keep user logged in
+ * @route POST /api/v1/users/signin
+ */
+//#region User Authentication
+export const authenticateInstructor = catchAsync(async (req, res) => {
+  const instructorId = req.user?._id;
+
+  if (!isValidObjectId(instructorId)) {
+    throw new AppError("Invalid Instructor Id", 400);
+  }
+
+  const instructor = await Instructor.findById(instructorId).select("_id");
+
+  if (!instructor) {
+    throw new AppError("User Not Found", 400);
+  }
+
+  return res.status(200).json({
+    success: true,
+    instructor,
+    message: "User Passed Authentication Check",
+  });
+});
+//#endregion

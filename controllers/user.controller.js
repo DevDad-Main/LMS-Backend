@@ -195,7 +195,6 @@ export const authenticateUser = catchAsync(async (req, res) => {
 
   if (!user) {
     throw new AppError("User Not Found", 400);
-    res.json({ success: false, message: "User not found" });
   }
 
   return res.status(200).json({

@@ -1,14 +1,23 @@
 import express from "express";
-import { isAuthenticated } from "../middleware/auth.middleware.js";
+import { isInstructorAuthenticated } from "../middleware/auth.middleware.js";
 import { upload } from "../utils/multer.js";
 import {
   validateSignup,
   validateSignin,
   validatePasswordChange,
 } from "../middleware/validation.middleware.js";
-import { createInstructorAccountWithGoogle } from "../controllers/instructor.controller.js";
+import {
+  createInstructorAccountWithGoogle,
+  authenticateInstructor,
+} from "../controllers/instructor.controller.js";
 
 const router = express.Router();
+
+router.get(
+  "/instructor-authenticated",
+  isInstructorAuthenticated,
+  authenticateInstructor,
+);
 
 router.post("/google-login", createInstructorAccountWithGoogle);
 
