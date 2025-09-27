@@ -8,12 +8,23 @@ import {
 } from "../middleware/validation.middleware.js";
 import {
   createInstructorAccountWithGoogle,
+  updateInstructorDetails,
   authenticateInstructor,
   getInstructorsCourses,
   signOutInstructor,
+  getInstructorProfile,
 } from "../controllers/instructor.controller.js";
 
 const router = express.Router();
+
+router
+  .route("/profile")
+  .get(isInstructorAuthenticated, getInstructorProfile)
+  .post(
+    upload.single("avatar"),
+    isInstructorAuthenticated,
+    updateInstructorDetails,
+  );
 
 router.get(
   "/instructor-authenticated",

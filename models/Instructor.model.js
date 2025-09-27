@@ -53,6 +53,7 @@ const instructorSchema = new mongoose.Schema(
       },
     ],
     authProvider: { type: String, enum: ["local", "google"], default: "local" },
+    folderId: { type: String, required: true },
   },
   {
     timestamps: true,
@@ -60,5 +61,14 @@ const instructorSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   },
 );
+
+//#region Initialize FolderId Before Saving New Course
+instructorSchema.pre("save", function (next) {
+  if (!this.folderId) {
+    this.folderId = uuidv7();
+  }
+  next();
+});
+//#endregion
 
 export const Instructor = mongoose.model("Instructor", instructorSchema);

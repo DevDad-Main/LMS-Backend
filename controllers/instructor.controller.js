@@ -5,6 +5,7 @@ import { generateInstructorToken } from "../utils/generateToken.js";
 import {
   uploadBufferToCloudinary,
   deleteImageFromCloudinary,
+  getPublicIdFromUrl,
 } from "../utils/cloudinary.js";
 import { catchAsync } from "../middleware/error.middleware.js";
 import { AppError } from "../middleware/error.middleware.js";
@@ -182,6 +183,78 @@ export const getInstructorsCourses = catchAsync(async (req, res) => {
     success: true,
     courses: instructor.createdCourses,
     message: "Courses Fetched Successful",
+  });
+});
+//#endregion
+
+//#region Update Instructor Details
+export const getInstructorProfile = catchAsync(async (req, res) => {
+  const instructorID = req.instructor?._id;
+
+  if (!isValidObjectId(instructorID)) {
+    throw new AppError("Invalid ID", 400);
+  }
+
+  const instructor = await Instructor.findById(instructorID);
+
+  if (!instructor) {
+    throw new AppError("No Instructor Found", 404);
+  }
+
+  return res.status(200).json({ success: true, instructor });
+});
+//#endregion
+
+//#region
+export const updateInstructorDetails = catchAsync(async (req, res) => {
+  const instructorID = req.instructor?._id;
+
+  if (!isValidObjectId(instructorID)) {
+    throw new AppError("Invalid ID", 400);
+  }
+
+  const { name, profession, bio, expertise, updateAvatar, updateExpertise } =
+    req.body;
+
+  const update = {};
+  if (name) update.name = name;
+  if (profession) update.profession = profession;
+  if (bio) update.bio = bio;
+
+  if (updateExpertise === "true" && expertise) {
+    update.expertise = JSON.parse(expertise);
+  }
+
+  const instructor = await Instructor.findById(instructorID);
+
+  if (updateAvatar === "true" && req.file) {
+    const folderId = instructor.folderId || `instructor-${instructor._id}`;
+    const result = await uploadBufferToCloudinary(req.file.buffer, folderId);
+
+    if (instructor.avatar) {
+      const oldPublicId = getPublicIdFromUrl(instructor.avatar);
+      await deleteImageFromCloudinary(oldPublicId);
+    }
+
+    update.avatar = result.secure_url;
+  } else if (!updateAvatar || updateAvatar === "false") {
+    update.avatar = instructor.avatar;
+  }
+
+  const updatedInstructor = await Instructor.findByIdAndUpdate(
+    instructorID,
+    { $set: update },
+    { new: true, runValidators: true },
+  );
+
+  if (!updatedInstructor) {
+    throw new AppError("Course Not Found", 404);
+  }
+
+  return res.status(200).json({
+    success: true,
+    instructor: updatedInstructor,
+    message: "Course Updated Successfully",
   });
 });
 //#endregion

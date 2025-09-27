@@ -118,37 +118,37 @@ export const createUserAccountWithGoogle = catchAsync(async (req, res) => {
     });
   }
 
-  // Real course ID
-  const courseId = new mongoose.Types.ObjectId("68d5418149b6fb48a22d8344");
-
-  // Find the course
-  const course = await Course.findById(courseId).populate({
-    path: "sections",
-    select: "title _id",
-    populate: {
-      path: "lectures",
-      select: "title videoUrl isCompleted _id",
-      model: "Lecture", // Explicitly specify the model name
-    },
-  });
-
-  console.log(course);
-  if (!course) {
-    throw new AppError("Course not found", 404);
-  }
-
-  await User.findByIdAndUpdate(
-    user._id,
-    {
-      $addToSet: {
-        enrolledCourses: {
-          course: course._id, // <-- the ObjectId of the course
-          enrolledAt: new Date(),
-        },
-      },
-    },
-    { new: true },
-  );
+  // // Real course ID
+  // const courseId = new mongoose.Types.ObjectId("68d5418149b6fb48a22d8344");
+  //
+  // // Find the course
+  // const course = await Course.findById(courseId).populate({
+  //   path: "sections",
+  //   select: "title _id",
+  //   populate: {
+  //     path: "lectures",
+  //     select: "title videoUrl isCompleted _id",
+  //     model: "Lecture", // Explicitly specify the model name
+  //   },
+  // });
+  //
+  // console.log(course);
+  // if (!course) {
+  //   throw new AppError("Course not found", 404);
+  // }
+  //
+  // await User.findByIdAndUpdate(
+  //   user._id,
+  //   {
+  //     $addToSet: {
+  //       enrolledCourses: {
+  //         course: course._id, // <-- the ObjectId of the course
+  //         enrolledAt: new Date(),
+  //       },
+  //     },
+  //   },
+  //   { new: true },
+  // );
 
   // Generate JWT token
   const { token } = await generateUserToken(user._id);
