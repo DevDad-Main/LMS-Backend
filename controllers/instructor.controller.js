@@ -120,6 +120,58 @@ export const createInstructorAccountWithGoogle = catchAsync(
 );
 //#endregion
 
+//#region Instructor Register With Form
+export const instructorRegisterWithForm = catchAsync(async (req, res) => {
+  const { name, email, password, profession, bio, expertise } = req.body;
+
+  console.log(req.body);
+
+  const avatarFile = req.file;
+
+  const parsedExpertise = JSON.parse(expertise) || [];
+  const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+
+  const instructor = await Instructor.create({
+    name,
+    email,
+    password: hashedPassword,
+    profession,
+    bio,
+    expertise: parsedExpertise,
+  });
+
+  let avatar;
+  try {
+    avatar = await uploadBufferToCloudinary(
+      avatarFile.buffer,
+      instructor.folderId,
+    );
+  } catch (error) {
+    throw new AppError("Failed To Upload Avatar", 400);
+  }
+
+  instructor.avatar = avatar.secure_url || "";
+  await instructor.save();
+
+  const { token } = await generateInstructorToken(instructor?._id);
+
+  return res
+    .status(201)
+    .cookie("instructorToken", token, options)
+    .json({
+      success: true,
+      token,
+      instructor: {
+        name: instructor.name,
+        email: instructor.email,
+        authProvider: instructor.authProvider,
+      },
+      message: "Google Login Successful",
+    });
+});
+
+//#endregion
+
 //#region Instructor SignOut
 /**
  * Sign out instructor and clear cookie

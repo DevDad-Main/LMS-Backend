@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { v7 as uuidv7 } from "uuid";
 
 const instructorSchema = new mongoose.Schema(
   {
@@ -53,7 +54,7 @@ const instructorSchema = new mongoose.Schema(
       },
     ],
     authProvider: { type: String, enum: ["local", "google"], default: "local" },
-    folderId: { type: String, required: true },
+    folderId: { type: String },
   },
   {
     timestamps: true,
