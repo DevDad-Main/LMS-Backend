@@ -47,6 +47,9 @@ router
     isInstructorAuthenticated,
     updateCourseDetails,
   );
+
+router.route("/learn/c/:id").get(isAuthenticated, getCourseDetails);
+
 // .patch(
 //   restrictTo("instructor"),
 //   upload.single("thumbnail"),
@@ -91,7 +94,7 @@ router.post(
 
 router.post(
   "/:id/lecture/:lectureId/toggle-complete",
-
+  isAuthenticated,
   toggleLectureCompletion,
 );
 
