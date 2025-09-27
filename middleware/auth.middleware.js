@@ -60,7 +60,7 @@ export const isInstructorAuthenticated = catchAsync(async (req, res, next) => {
       return res.json({ success: false, message: "Unauthorized" });
     }
 
-    req.user = instructor;
+    req.instructor = instructor;
 
     next();
   } catch (error) {

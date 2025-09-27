@@ -9,7 +9,7 @@ import {
   addSection,
   searchCourses,
   getPublishedCourses,
-  getMyCreatedCourses,
+  getCourses,
   updateCourseDetails,
   getCourseDetails,
   addLectureToCourseAndSection,
@@ -32,12 +32,12 @@ router.get("/search", searchCourses);
 // Course management
 // router.route("/").get(restrictTo("instructor"), getMyCreatedCourses);
 
-router.route("/courses").get(getMyCreatedCourses);
+router.route("/courses").get(getCourses);
 
 router
   .route("/add-course")
   // .post(restrictTo("instructor"), upload.single("thumbnail"), createNewCourse);
-  .post(upload.single("thumbnail"), createNewCourse);
+  .post(upload.single("thumbnail"), isInstructorAuthenticated, createNewCourse);
 // Course details and updates
 router
   .route("/c/:id")

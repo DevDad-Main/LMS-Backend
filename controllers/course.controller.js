@@ -2,7 +2,7 @@ import { Course } from "../models/Course.model.js";
 import { CourseProgress } from "../models/CourseProgress.model.js";
 import { Section } from "../models/Section.model.js";
 import { Lecture } from "../models/Lecture.model.js";
-import { User } from "../models/User.model.js";
+import { Instructor } from "../models/Instructor.model.js";
 import {
   uploadBufferToCloudinary,
   getPublicIdFromUrl,
@@ -51,8 +51,8 @@ export const createNewCourse = catchAsync(async (req, res) => {
     learnableSkills: parsedLearnableSkills,
     tags: parsedTags,
     languages: parsedLanguages,
-    instructor: req.user?._id,
-    courseOwner: req.user?._id,
+    instructor: req.instructor?._id,
+    courseOwner: req.instructor?._id,
   });
 
   console.log(thumbnail);
@@ -73,6 +73,11 @@ export const createNewCourse = catchAsync(async (req, res) => {
 
   course.thumbnail = result.secure_url;
   await course.save();
+
+  const loggedInInstructor = await Instructor.findByIdAndUpdate(
+    req.instructor?._id,
+    { $addToSet: { createdCourses: course } },
+  );
 
   return res.status(201).json({
     success: true,
@@ -103,17 +108,22 @@ export const getPublishedCourses = catchAsync(async (req, res) => {
  * Get courses created by the current user
  * @route GET /api/v1/courses/my-courses
  */
-export const getMyCreatedCourses = catchAsync(async (req, res) => {
+export const getCourses = catchAsync(async (req, res) => {
   //TODO: Later handle this differently with a seperate admin/instructor section
-  const userId = req.user?._id;
 
-  if (!isValidObjectId(userId)) {
-    throw new AppError("Not a valid ID", 404);
-  }
-
-  const courses = await Course.find({ instructor: userId }).select(
-    "title description category level price thumbnail sections instructor",
-  );
+  const courses = await Course.find()
+    .populate({
+      path: "sections",
+      select: "_id",
+      populate: {
+        path: "lectures",
+        select: "_id duration",
+      },
+    })
+    .populate("instructor")
+    .select(
+      "title description category level price thumbnail sections instructor enrolledStudents ",
+    );
 
   console.log(courses);
   return res

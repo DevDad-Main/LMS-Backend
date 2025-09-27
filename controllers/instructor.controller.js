@@ -141,7 +141,7 @@ export const signOutInstructor = catchAsync(async (_, res) => {
  * @route POST /api/v1/users/signin
  */
 export const authenticateInstructor = catchAsync(async (req, res) => {
-  const instructorId = req.user?._id;
+  const instructorId = req.instructor?._id;
 
   if (!isValidObjectId(instructorId)) {
     throw new AppError("Invalid Instructor Id", 400);
@@ -163,7 +163,7 @@ export const authenticateInstructor = catchAsync(async (req, res) => {
 
 //#region Get Instructors Courses
 export const getInstructorsCourses = catchAsync(async (req, res) => {
-  const instructorId = req.user?._id;
+  const instructorId = req.instructor?._id;
 
   if (!isValidObjectId(instructorId)) {
     throw new AppError("Invalid Instructor ID", 400);

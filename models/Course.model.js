@@ -152,4 +152,13 @@ function limitArray(limit) {
 }
 //#endregion
 
+//#region Initialize FolderId Before Saving New Course
+courseSchema.pre("save", function (next) {
+  if (!this.folderId) {
+    this.folderId = uuidv7();
+  }
+  next();
+});
+//#endregion
+
 export const Course = mongoose.model("Course", courseSchema);
