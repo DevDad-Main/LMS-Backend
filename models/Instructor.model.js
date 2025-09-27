@@ -71,4 +71,12 @@ instructorSchema.pre("save", function (next) {
 });
 //#endregion
 
+instructorSchema.virtual("studentCount", {
+  ref: "Course",
+  localField: "_id",
+  foreignField: "instructor",
+  justOne: false,
+  options: { select: "enrolledStudents" },
+});
+
 export const Instructor = mongoose.model("Instructor", instructorSchema);

@@ -54,10 +54,7 @@ export const createInstructorAccountWithGoogle = catchAsync(
 
     const user = await User.findOne({ email });
     if (user) {
-      throw new AppError(
-        "A User already exists with that email. Please choose another",
-        400,
-      );
+      throw new AppError("This account is not a verified instructor", 400);
     }
 
     // Find or create user
@@ -108,7 +105,7 @@ export const createInstructorAccountWithGoogle = catchAsync(
 
     return res
       .status(201)
-      .cookie("token", token, options)
+      .cookie("instructorToken", token, options)
       .json({
         success: true,
         token,

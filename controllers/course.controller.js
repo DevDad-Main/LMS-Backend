@@ -315,7 +315,14 @@ export const getCourseDetails = catchAsync(async (req, res) => {
         select: "title videoUrl _id duration",
       },
     })
-    .populate("instructor")
+    // .populate({
+    //   path: "instructor",
+    //   select: "name bio profession expertise avatar createdCourses",
+    //   populate: {
+    //     path: "createdCourses",
+    //     select: "title subtitle",
+    //   },
+    // })
     .select(
       "title description category level price thumbnail sections instructor subtitle requirements learnableSkills enrolledStudents lastUpdated tags languages",
     );
@@ -323,6 +330,18 @@ export const getCourseDetails = catchAsync(async (req, res) => {
   if (!course) {
     throw new AppError("Course Not Found", 404);
   }
+
+  const instructor = await Instructor.findById(course.instructor)
+    .populate({ path: "createdCourses", select: "title subtitle" })
+    .populate({
+      path: "studentCount",
+      select: "enrolledStudents",
+    });
+
+  const totalStudents = instructor.studentCount.reduce(
+    (sum, course) => sum + course.enrolledStudents.length,
+    0,
+  );
 
   // Fetch user's completed lectures for this course
   const userCourseProgress = await CourseProgress.findOne({
@@ -342,7 +361,6 @@ export const getCourseDetails = catchAsync(async (req, res) => {
       category: course.category,
       level: course.level,
       price: course.price,
-      instructor: course.instructor,
       enrolledStudents: course.enrolledStudents.length,
       duration: course.duration, // Explicitly call virtual
       lastUpdated: course.lastUpdated,
@@ -351,6 +369,8 @@ export const getCourseDetails = catchAsync(async (req, res) => {
       tags: course.tags,
       languages: course.languages,
       thumbnail: course.thumbnail || "",
+      instructor: instructor,
+      totalStudents,
       sections: course.sections.map((section) => ({
         _id: section._id,
         title: section.title,
