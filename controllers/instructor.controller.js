@@ -124,7 +124,11 @@ export const createInstructorAccountWithGoogle = catchAsync(
 export const instructorRegisterWithForm = catchAsync(async (req, res) => {
   const { name, email, password, profession, bio, expertise } = req.body;
 
-  console.log(req.body);
+  const exisitngInstructor = await Instructor.findOne({ email });
+
+  if (exisitngInstructor) {
+    throw new AppError("Email already taken, Please choose another..", 400);
+  }
 
   const avatarFile = req.file;
 
@@ -166,10 +170,41 @@ export const instructorRegisterWithForm = catchAsync(async (req, res) => {
         email: instructor.email,
         authProvider: instructor.authProvider,
       },
-      message: "Google Login Successful",
     });
 });
+//#endregion
 
+//#region Instructor Local Login
+export const instructorLogin = catchAsync(async (req, res) => {
+  const { email, password } = req.body;
+
+  //NOTE: Only retrieving it like so due to bcrypt undefined error below as in our schema we set select to false;
+  const instructor = await Instructor.findOne({ email }).select("+password");
+
+  if (!instructor) {
+    throw new AppError("Instructor Not Found", 404);
+  }
+  const doesPasswordMatch = await bcrypt.compare(password, instructor.password);
+
+  if (!doesPasswordMatch) {
+    throw new AppError("Incorrect Password", 401);
+  }
+
+  const { token } = await generateInstructorToken(instructor?._id);
+
+  return res
+    .status(200)
+    .cookie("instructorToken", token, options)
+    .json({
+      success: true,
+      token,
+      instructor: {
+        name: instructor.name,
+        email: instructor.email,
+        authProvider: instructor.authProvider,
+      },
+    });
+});
 //#endregion
 
 //#region Instructor SignOut
@@ -180,7 +215,7 @@ export const instructorRegisterWithForm = catchAsync(async (req, res) => {
 export const signOutInstructor = catchAsync(async (_, res) => {
   return res
     .status(200)
-    .clearCookie("token", options)
+    .clearCookie("instructorToken", options)
     .json({ success: true, message: "Instructor Signed Out" });
 });
 //#endregion
@@ -254,7 +289,7 @@ export const getInstructorProfile = catchAsync(async (req, res) => {
 });
 //#endregion
 
-//#region
+//#region Update Instructor Profile Details
 export const updateInstructorDetails = catchAsync(async (req, res) => {
   const instructorID = req.instructor?._id;
 

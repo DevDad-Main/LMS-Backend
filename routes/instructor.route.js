@@ -14,6 +14,7 @@ import {
   signOutInstructor,
   getInstructorProfile,
   instructorRegisterWithForm,
+  instructorLogin,
 } from "../controllers/instructor.controller.js";
 
 const router = express.Router();
@@ -36,6 +37,7 @@ router.get("/signout", signOutInstructor);
 router.get("/courses", isInstructorAuthenticated, getInstructorsCourses);
 
 router.post("/register", upload.single("avatar"), instructorRegisterWithForm);
+router.post("/login", instructorLogin);
 router.post("/google-login", createInstructorAccountWithGoogle);
 
 export default router;
