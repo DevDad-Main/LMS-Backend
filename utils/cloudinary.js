@@ -38,3 +38,29 @@ export const deleteImageFromCloudinary = async (
 ) => {
   return cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
 };
+
+export const deleteCourseFolderFromCloudinary = async (folderId) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const prefix = `LearnHub/${folderId}`;
+
+      // Delete images in the folder
+      await cloudinary.api.delete_resources_by_prefix(prefix, {
+        resource_type: "image",
+      });
+
+      // Delete videos in the folder
+      await cloudinary.api.delete_resources_by_prefix(prefix, {
+        resource_type: "video",
+      });
+
+      // Finally, delete the folder itself
+      const result = await cloudinary.api.delete_folder(prefix);
+
+      resolve(result);
+    } catch (error) {
+      console.error("Error deleting folder from Cloudinary:", error);
+      reject(error);
+    }
+  });
+};

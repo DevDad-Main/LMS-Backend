@@ -7,6 +7,7 @@ import {
   uploadBufferToCloudinary,
   getPublicIdFromUrl,
   deleteImageFromCloudinary,
+  deleteCourseFolderFromCloudinary,
 } from "../utils/cloudinary.js";
 import { catchAsync } from "../middleware/error.middleware.js";
 import { AppError } from "../middleware/error.middleware.js";
@@ -702,5 +703,35 @@ export const deleteLecture = catchAsync(async (req, res) => {
   await Lecture.findByIdAndDelete(lectureId);
 
   return res.status(200).json({ success: true, message: "Lecture deleted" });
+});
+//#endregion
+
+//#region Delete Course
+export const deleteCourse = catchAsync(async (req, res) => {
+  const { courseId } = req.params;
+
+  if (!isValidObjectId(courseId)) {
+    throw new AppError("Invalid Course ID", 400);
+  }
+
+  const course = await Course.findByIdAndDelete(courseId);
+
+  if (!course) {
+    throw new AppError("Course Not Found", 404);
+  }
+
+  await Lecture.deleteMany({ course: course });
+  await Section.deleteMany({ course: course });
+
+  try {
+    const result = await deleteCourseFolderFromCloudinary(course.folderId);
+    console.log(result);
+  } catch (error) {
+    throw new AppError("Failed to remove Course Folder Assets", 400);
+  }
+
+  return res
+    .status(200)
+    .json({ success: true, message: "Course Deleted Successfully" });
 });
 //#endregion

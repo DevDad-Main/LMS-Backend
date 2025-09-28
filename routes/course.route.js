@@ -6,6 +6,7 @@ import {
 } from "../middleware/auth.middleware.js";
 import {
   createNewCourse,
+  deleteCourse,
   addSection,
   searchCourses,
   getPublishedCourses,
@@ -46,7 +47,7 @@ router
 
 router.route("/learn/c/:id").get(isAuthenticated, getCourseDetails);
 
-router.route("/c/:courseId").get(getCourseLectures);
+router.route("/c/:courseId").get(getCourseLectures).delete(deleteCourse);
 
 router.post(
   "/add-lecture",
