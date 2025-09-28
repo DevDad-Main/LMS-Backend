@@ -678,3 +678,29 @@ export const deleteSection = catchAsync(async (req, res) => {
     .json({ success: true, message: "Deleted Successfully" });
 });
 //#endregion
+
+//#region Delete Lecture
+export const deleteLecture = catchAsync(async (req, res) => {
+  const { savedCourseId, sectionId, lectureId } = req.params;
+
+  if (
+    !isValidObjectId(savedCourseId) ||
+    !isValidObjectId(sectionId) ||
+    !isValidObjectId(lectureId)
+  ) {
+    throw new AppError("Invalid Ids", 400);
+  }
+
+  const section = await Section.findByIdAndUpdate(sectionId, {
+    $pull: { lectures: lectureId },
+  });
+
+  if (!section) {
+    throw new AppError("No Section Found", 404);
+  }
+
+  await Lecture.findByIdAndDelete(lectureId);
+
+  return res.status(200).json({ success: true, message: "Lecture deleted" });
+});
+//#endregion

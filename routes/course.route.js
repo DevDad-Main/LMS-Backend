@@ -19,6 +19,7 @@ import {
   updateCourseLecture,
   getCoursesByCriteria,
   deleteSection,
+  deleteLecture,
 } from "../controllers/course.controller.js";
 import { upload } from "../utils/multer.js";
 
@@ -27,14 +28,7 @@ const router = express.Router();
 // Public routes
 router.get("/published", getPublishedCourses);
 router.get("/all", getCoursesByCriteria);
-
-// Protected routes
-// router.use(isAuthenticated);
-
-// Course management
-// router.route("/").get(restrictTo("instructor"), getMyCreatedCourses);
-
-router.route("/courses").get(getCourses);
+router.get("/courses", getCourses);
 
 router
   .route("/add-course")
@@ -52,15 +46,7 @@ router
 
 router.route("/learn/c/:id").get(isAuthenticated, getCourseDetails);
 
-// .patch(
-//   restrictTo("instructor"),
-//   upload.single("thumbnail"),
-//   updateCourseDetails,
-// );
-
-// Lecture management
 router.route("/c/:courseId").get(getCourseLectures);
-// .post(restrictTo("instructor"), upload.single("video"), addLectureToCourse);
 
 router.post(
   "/add-lecture",
@@ -68,18 +54,9 @@ router.post(
   addLectureToCourseAndSection,
 );
 
-//TODO: Add An Update Controller
-router.put(
-  "/update-lecture/:editingLectureId",
-  upload.single("videoFile"),
-  // addLectureToCourseAndSection,
-);
-
-//TODO: Add Later
-// // Section routes
 router.post(
   "/:courseId/add-section",
-
+  isInstructorAuthenticated,
   upload.none(),
   addSection,
 );
@@ -89,7 +66,7 @@ router.post(
 // Lecture routes
 router.post(
   "/:courseId/section/:sectionId/add-lecture",
-
+  isInstructorAuthenticated,
   upload.single("videoFile"),
   addLectureToCourseAndSection,
 );
@@ -103,6 +80,7 @@ router.post(
 router.put(
   "/:savedCourseId/update-lecture/:editingLectureId",
   upload.single("videoFile"),
+  isInstructorAuthenticated,
   updateCourseLecture,
 );
 
@@ -117,6 +95,12 @@ router.delete(
   "/:savedCourseId/delete-section/:sectionId",
   isInstructorAuthenticated,
   deleteSection,
+);
+
+router.delete(
+  "/:savedCourseId/section/:sectionId/delete-lecture/:lectureId",
+  isInstructorAuthenticated,
+  deleteLecture,
 );
 
 // router.delete("/:courseId/delete-lecture/:lectureId", protect, deleteLecture);
