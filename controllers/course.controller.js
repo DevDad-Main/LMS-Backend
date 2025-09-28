@@ -13,6 +13,10 @@ import { AppError } from "../middleware/error.middleware.js";
 import mongoose, { isValidObjectId } from "mongoose";
 
 //#region Get Courses By Criteria -> Filters etc
+/**
+ * Gets all courses matched by the criteria sent from the frontend
+ * @GET /api/v1/course/all?
+ * */
 export const getCoursesByCriteria = catchAsync(async (req, res) => {
   const {
     page = 1,
@@ -640,5 +644,37 @@ export const addSection = catchAsync(async (req, res) => {
   });
 
   res.status(201).json({ success: true, sectionId: section._id });
+});
+//#endregion
+
+//#region Delete Section
+export const deleteSection = catchAsync(async (req, res) => {
+  const { savedCourseId, sectionId } = req.params;
+
+  if (!isValidObjectId(savedCourseId) || !isValidObjectId(sectionId)) {
+    throw new AppError("Invalid IDS", 400);
+  }
+
+  const section = await Section.findById(sectionId);
+
+  if (!section) {
+    throw new AppError("Section Not Found", 404);
+  }
+
+  const lectureIds = section.lectures;
+
+  if (lectureIds.length > 0) {
+    await Lecture.deleteMany({ _id: { $in: lectureIds } });
+  }
+
+  await Section.findByIdAndDelete(sectionId);
+
+  await Course.findByIdAndUpdate(savedCourseId, {
+    $pull: { sections: sectionId },
+  });
+
+  return res
+    .status(200)
+    .json({ success: true, message: "Deleted Successfully" });
 });
 //#endregion

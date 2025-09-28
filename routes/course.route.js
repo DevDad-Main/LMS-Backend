@@ -18,6 +18,7 @@ import {
   updateCourseSection,
   updateCourseLecture,
   getCoursesByCriteria,
+  deleteSection,
 } from "../controllers/course.controller.js";
 import { upload } from "../utils/multer.js";
 
@@ -108,7 +109,14 @@ router.put(
 router.post(
   "/:savedCourseId/update-section/:editingSectionId",
   upload.none(),
+  isInstructorAuthenticated,
   updateCourseSection,
+);
+
+router.delete(
+  "/:savedCourseId/delete-section/:sectionId",
+  isInstructorAuthenticated,
+  deleteSection,
 );
 
 // router.delete("/:courseId/delete-lecture/:lectureId", protect, deleteLecture);
