@@ -17,6 +17,7 @@ import {
   toggleLectureCompletion,
   updateCourseSection,
   updateCourseLecture,
+  getCoursesByCriteria,
 } from "../controllers/course.controller.js";
 import { upload } from "../utils/multer.js";
 
@@ -24,7 +25,7 @@ const router = express.Router();
 
 // Public routes
 router.get("/published", getPublishedCourses);
-router.get("/search", searchCourses);
+router.get("/all", getCoursesByCriteria);
 
 // Protected routes
 // router.use(isAuthenticated);

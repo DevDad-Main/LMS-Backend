@@ -12,6 +12,66 @@ import { catchAsync } from "../middleware/error.middleware.js";
 import { AppError } from "../middleware/error.middleware.js";
 import mongoose, { isValidObjectId } from "mongoose";
 
+//#region Get Courses By Criteria -> Filters etc
+export const getCoursesByCriteria = catchAsync(async (req, res) => {
+  const {
+    page = 1,
+    limit = 3,
+    search,
+    category,
+    level,
+    sort = "newest",
+  } = req.query;
+
+  const query = {};
+  if (search) query.title = { $regex: search, $options: "i" };
+  if (category) query.category = decodeURIComponent(category).replace("-", " ");
+  if (level) query.level = level;
+
+  let sortOption = {};
+  switch (sort) {
+    case "newest":
+      sortOption = { createdAt: -1 };
+      break;
+    case "oldest":
+      sortOption = { createdAt: 1 };
+      break;
+    case "price-low":
+      sortOption = { price: 1 };
+      break;
+    case "price-high":
+      sortOption = { price: -1 };
+      break;
+    case "popular":
+      sortOption = { studentsCount: -1 };
+      break;
+    case "rating":
+      sortOption = { rating: -1 };
+      break;
+    default:
+      sortOption = { createdAt: -1 };
+  }
+
+  const courses = await Course.find(query)
+    .sort(sortOption)
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit))
+    .populate("instructor", "name email"); // Populate instructor if needed
+
+  const totalCourses = await Course.countDocuments(query);
+  const totalPages = Math.ceil(totalCourses / limit);
+
+  return res.json({
+    success: true,
+    courses,
+    totalPages,
+    totalCourses,
+    message: "Courses fetched successfully",
+  });
+});
+
+//#endregion
+
 //#region Create New Course
 /**
  * Create a new course
