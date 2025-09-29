@@ -301,6 +301,39 @@ export const addCourseToCart = catchAsync(async (req, res) => {
 //#endregion
 
 //#region Delete Course From Cart
+export const deleteCourseFromCart = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  if (!isValidObjectId(id)) {
+    throw new AppError("Course ID is not valid", 400);
+  }
+  const user = await User.findById(req.user?._id);
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  const inCart = user.cart.some(
+    (item) => item.course.toString() === id.toString(),
+  );
+
+  if (!inCart) {
+    throw new AppError("Course not found in cart", 400);
+  }
+
+  // Pull the course from cart
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user?._id,
+    { $pull: { cart: { course: id } } },
+    { new: true },
+  );
+
+  return res.status(200).json({
+    success: true,
+    cart: updatedUser.cart,
+    message: "Course removed from cart",
+  });
+});
 
 //#endregion
 
