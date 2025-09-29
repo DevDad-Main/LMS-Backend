@@ -369,6 +369,37 @@ export const getUsersCart = catchAsync(async (req, res) => {
 });
 //#endregion
 
+//#region Get Users Dashboard
+export const getUsersDashboard = catchAsync(async (req, res) => {
+  const userId = req.user?._id;
+
+  if (!isValidObjectId(userId)) {
+    throw new AppError("Invalid User ID", 400);
+  }
+
+  const user = await User.findById(userId).populate({
+    path: "enrolledCourses",
+    select: "course",
+    populate: {
+      path: "course",
+    },
+  });
+
+  const courseProgress = await CourseProgress.find({ user: userId });
+
+  if (!user) {
+    throw new AppError("User Not Found", 404);
+  }
+
+  return res.status(200).json({
+    success: true,
+    user,
+    courseProgress,
+    message: "Dashboard Data Fetched",
+  });
+});
+//#endregion
+
 /**
  * Get current user profile
  * @route GET /api/v1/users/profile

@@ -4,6 +4,7 @@ import {
   authenticateUser,
   changeUserPassword,
   deleteCourseFromCart,
+  getUsersDashboard,
   createUserAccount,
   createUserAccountWithGoogle,
   deleteUserAccount,
@@ -28,6 +29,7 @@ router.get("/signout", signOutUser);
 router.get("/user-authenticated", isAuthenticated, authenticateUser);
 router.get("/enrolled-courses", isAuthenticated, getEnrolledCourses);
 router.get("/cart/get", isAuthenticated, getUsersCart);
+router.get("/dashboard", isAuthenticated, getUsersDashboard);
 
 router.post("/signup", validateSignup, createUserAccount);
 router.post("/google-login", createUserAccountWithGoogle);

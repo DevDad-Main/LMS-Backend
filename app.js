@@ -17,6 +17,7 @@ import courseProgressRoute from "./routes/courseProgress.route.js";
 //TODO: Change this to use stripe
 // import razorpayRoute from "./routes/razorpay.routes.js";
 import healthRoute from "./routes/health.routes.js";
+import stripeRoutes from "./routes/stripe.routes.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 
 //#region Constants
@@ -75,6 +76,7 @@ app.use("/api/v1/instructor", instructorRoute);
 app.use("/api/v1/course", courseRoute);
 app.use("/api/v1/purchase", purchaseRoute);
 app.use("/api/v1/progress", courseProgressRoute);
+app.use("/api/v1/stripe", stripeRoutes);
 // app.use("/api/v1/razorpay", razorpayRoute);
 app.use("/health", healthRoute);
 //#endregion

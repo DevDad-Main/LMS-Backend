@@ -2,11 +2,13 @@ import mongoose from "mongoose";
 
 const coursePurchaseSchema = new mongoose.Schema(
   {
-    course: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Course",
-      required: [true, "Course reference is required"],
-    },
+    courses: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Course",
+        required: [true, "Course reference is required"],
+      },
+    ],
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -21,7 +23,7 @@ const coursePurchaseSchema = new mongoose.Schema(
       type: String,
       required: [true, "Currency is required"],
       uppercase: true,
-      default: "PLN",
+      default: "USD",
     },
     status: {
       type: String,

@@ -136,13 +136,12 @@ export const createNewCourse = catchAsync(async (req, res) => {
     throw new AppError(error.message, error.status);
   }
 
-  course.thumbnail = result.secure_url;
+  course.thumbnail = result.secure_url || "";
   await course.save();
 
-  const loggedInInstructor = await Instructor.findByIdAndUpdate(
-    req.instructor?._id,
-    { $addToSet: { createdCourses: course } },
-  );
+  await Instructor.findByIdAndUpdate(req.instructor?._id, {
+    $addToSet: { createdCourses: course },
+  });
 
   return res.status(201).json({
     success: true,
