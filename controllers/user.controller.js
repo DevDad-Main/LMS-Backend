@@ -300,6 +300,10 @@ export const addCourseToCart = catchAsync(async (req, res) => {
 });
 //#endregion
 
+//#region Delete Course From Cart
+
+//#endregion
+
 //#region Get Users Cart
 export const getUsersCart = catchAsync(async (req, res) => {
   const user = await User.findById(req.user?._id).populate({
@@ -307,6 +311,16 @@ export const getUsersCart = catchAsync(async (req, res) => {
     select: "course quantity",
     populate: {
       path: "course",
+      populate: [
+        {
+          path: "sections",
+          select: "lectures",
+        },
+        {
+          path: "instructor", // populate instructor inside course
+          select: "name title avatar bio expertise yearsOfExperience",
+        },
+      ],
     },
   });
 

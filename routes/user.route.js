@@ -3,6 +3,7 @@ import {
   addCourseToCart,
   authenticateUser,
   changeUserPassword,
+  deleteCourseFromCart,
   createUserAccount,
   createUserAccountWithGoogle,
   deleteUserAccount,
@@ -52,5 +53,6 @@ router.patch(
 
 // Account management
 router.delete("/account", isAuthenticated, deleteUserAccount);
+router.delete("/cart/delete/:id", isAuthenticated, deleteCourseFromCart);
 
 export default router;
