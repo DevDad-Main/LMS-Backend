@@ -7,6 +7,14 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+//#region Upload File To Cloudinary
+/**
+ * Uploads the specified file using Buffers and Streams.
+ * @param {Int32Array} buffer
+ * @param {string} folderId
+ * @param {string} resourceType
+ * @returns Promise -> If we successfully manage to pipe our stream with our buffered data file to Cloudinary
+ */
 export const uploadBufferToCloudinary = async (
   buffer,
   folderId,
@@ -23,7 +31,9 @@ export const uploadBufferToCloudinary = async (
     streamifier.createReadStream(buffer).pipe(stream);
   });
 };
+//#endregion
 
+//#region Get Public ID from URL
 export const getPublicIdFromUrl = (url) => {
   const parts = url.split("/");
   const fileWithExtension = parts.pop(); // 'filename.jpg'
@@ -31,14 +41,29 @@ export const getPublicIdFromUrl = (url) => {
   const publicId = `${folder}/${fileWithExtension.split(".")[0]}`;
   return publicId;
 };
+//#endregion
 
+//#region Delete Image From Cloudinary
+/**
+ *
+ * @param {string} publicId
+ * @param {string} resourceType
+ * @returns Promise on whether we have deleted the file or not
+ */
 export const deleteImageFromCloudinary = async (
   publicId,
   resourceType = "image",
 ) => {
   return cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
 };
+//#endregion
 
+//#region Delete Course Folder And It's Contents
+/**
+ * Deletes all files recursively from the specificed folderId and then cleans up by deleting the Folder
+ * @param {string} folderId
+ * @returns Promise -> Resolves after we delete all file contents and then deletes the course folder or rejects if we have an issue doing so
+ */
 export const deleteCourseFolderFromCloudinary = async (folderId) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -64,3 +89,4 @@ export const deleteCourseFolderFromCloudinary = async (folderId) => {
     }
   });
 };
+//#endregion

@@ -265,6 +265,63 @@ export const getEnrolledCourses = catchAsync(async (req, res) => {
 });
 //#endregion
 
+//#region Add Course To Cart
+export const addCourseToCart = catchAsync(async (req, res) => {
+  const { courseId } = req.body;
+
+  if (!isValidObjectId(courseId)) {
+    throw new AppError("Invalid Course ID", 400);
+  }
+
+  // Find the user
+  const user = await User.findById(req.user?._id);
+
+  if (!user) {
+    throw new AppError("User Not Found", 404);
+  }
+
+  // Check if course is already in cart
+  const alreadyInCart = user.cart.some(
+    (item) => item.course.toString() === courseId,
+  );
+
+  if (alreadyInCart) {
+    throw new AppError("Course already in cart", 400);
+  }
+
+  user.cart.push({ course: courseId, quantity: 1 });
+  await user.save();
+
+  return res.status(200).json({
+    success: true,
+    cart: user.cart,
+    message: "Item added to cart",
+  });
+});
+//#endregion
+
+//#region Get Users Cart
+export const getUsersCart = catchAsync(async (req, res) => {
+  const user = await User.findById(req.user?._id).populate({
+    path: "cart",
+    select: "course quantity",
+    populate: {
+      path: "course",
+    },
+  });
+
+  if (!user) {
+    throw new AppError("No User Found", 404);
+  }
+
+  return res.status(200).json({
+    success: true,
+    cart: user.cart,
+    message: "Cart fetched successfully",
+  });
+});
+//#endregion
+
 /**
  * Get current user profile
  * @route GET /api/v1/users/profile

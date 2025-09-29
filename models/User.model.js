@@ -51,6 +51,19 @@ const userSchema = new mongoose.Schema(
         },
       },
     ],
+    cart: [
+      {
+        course: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Course",
+        },
+        quantity: {
+          type: Number,
+          default: 1,
+          max: [1, "Only one quantity of this course is allowed"],
+        },
+      },
+    ],
     resetPasswordToken: String,
     resetPasswordExpire: Date,
     lastActive: {
