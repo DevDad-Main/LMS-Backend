@@ -32,10 +32,10 @@ const courseProgressSchema = new mongoose.Schema(
       ref: "Course",
       required: [true, "Course reference is required"],
     },
-    isCompleted: {
-      type: Boolean,
-      default: false,
-    },
+    // isCompleted: {
+    //   type: Boolean,
+    //   default: false,
+    // },
     completedLectures: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -55,24 +55,27 @@ const courseProgressSchema = new mongoose.Schema(
   },
 );
 
-//#region Calculate Completion Percentage Virtual
-// courseProgressSchema.virtual("completionPercentage").get(function () {
-//   if (!this.lectureProgress || this.lectureProgress.length === 0) return 0;
-//   const completed = this.lectureProgress.filter((lp) => lp.isCompleted).length;
-//   return Math.round((completed / this.lectureProgress.length) * 100);
-// });
-
-courseProgressSchema.virtual("completionPercentage").get(function () {
-  if (!this.course?.sections || this.course.sections.length === 0) return 0;
-
-  // Flatten all lectures in the course
-  const allLectures = this.course.sections.flatMap(
-    (section) => section.lectures || [],
+//#region Calculate Completion Method
+courseProgressSchema.methods.calculateCompletion = function () {
+  const totalLectures = this.course?.sections?.reduce(
+    (acc, s) => acc + (s.lectures?.length || 0),
+    0,
   );
-  if (allLectures.length === 0) return 0;
+  const completedCount = this.completedLectures?.length || 0;
+  if (!totalLectures) return 0;
+  return Math.round((completedCount / totalLectures) * 100);
+};
+//#endregion
 
-  const completedCount = this.completedLectures.length;
-  return Math.round((completedCount / allLectures.length) * 100);
+//#region Completion Percentage Virtual
+courseProgressSchema.virtual("completionPercentage").get(function () {
+  return this.calculateCompletion();
+});
+//#endregion
+
+//#region Is Course Completed Virtual
+courseProgressSchema.virtual("isCompleted").get(function () {
+  return this.calculateCompletion() === 100;
 });
 //#endregion
 
