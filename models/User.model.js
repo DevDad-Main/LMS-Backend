@@ -79,6 +79,8 @@ const userSchema = new mongoose.Schema(
   },
 );
 
+userSchema.index({ _id: 1, "enrolledCourses.course": 1 }, { unique: true });
+
 //#region Encrypt password before saving
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {

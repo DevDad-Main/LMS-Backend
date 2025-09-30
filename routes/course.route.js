@@ -8,6 +8,7 @@ import {
   createNewCourse,
   deleteCourse,
   addSection,
+  updateLastAccessed,
   searchCourses,
   getPublishedCourses,
   getCourses,
@@ -48,6 +49,8 @@ router
 router.route("/learn/c/:id").get(isAuthenticated, getCourseDetails);
 
 router.route("/c/:courseId").get(getCourseLectures).delete(deleteCourse);
+
+router.post("/c/:id/last-accessed", isAuthenticated, updateLastAccessed);
 
 router.post(
   "/add-lecture",

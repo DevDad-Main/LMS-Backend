@@ -736,3 +736,29 @@ export const deleteCourse = catchAsync(async (req, res) => {
     .json({ success: true, message: "Course Deleted Successfully" });
 });
 //#endregion
+
+//#region Update Course Progress Last Accessed
+export const updateLastAccessed = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  if (!isValidObjectId(id)) {
+    throw new AppError("Invalid ID", 400);
+  }
+
+  const courseProgress = await CourseProgress.findOneAndUpdate(
+    { course: id },
+    { $set: { lastAccessed: Date.now() } },
+  );
+
+  if (!courseProgress) {
+    throw new AppError("No Course Progress Found", 404);
+  }
+
+  return res.status(200).json({
+    success: true,
+    courseProgress,
+    message: "Updated Last Accessed Course Field",
+  });
+});
+
+//#endregion

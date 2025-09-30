@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { User } from "../models/User.model.js";
 import { CoursePurchase } from "../models/CoursePurchase.model.js";
+import { Course } from "../models/Course.model.js";
 import mongoose, { isValidObjectId } from "mongoose";
 import { CourseProgress } from "../models/CourseProgress.model.js";
 
@@ -29,32 +30,36 @@ export const postConfirmPayment = async (req, res) => {
 
       console.log(coursesId);
 
-      await User.findByIdAndUpdate(userId, {
-        $addToSet: {
-          enrolledCourses: {
-            $each: coursesId.map((id) => ({
-              course: new mongoose.Types.ObjectId(id),
-              enrolledAt: new Date(),
-            })),
+      for (const courseId of coursesId) {
+        await User.updateOne(
+          { _id: userId, "enrolledCourses.course": { $ne: courseId } },
+          {
+            $push: {
+              enrolledCourses: { course: courseId, enrolledAt: new Date() },
+            },
           },
-        },
-        $set: { cart: [] },
-      });
+        );
+      }
+
+      await User.findByIdAndUpdate(userId, { $set: { cart: [] } });
 
       for (const courseId of coursesId) {
-        const exists = await CourseProgress.findOne({
-          user: userId,
-          course: courseId,
-        });
-        if (!exists) {
-          await CourseProgress.create({
-            user: userId,
-            course: courseId,
-          });
-        }
+        await CourseProgress.updateOne(
+          { user: userId, course: courseId }, // find existing
+          { user: userId, course: courseId }, // if not found, insert this
+          { upsert: true }, // ensures no duplicates
+        );
       }
 
       // await User.findByIdAndUpdate(req.user?._id, { $set: { cart: [] } });
+
+      const userObjectId = new mongoose.Types.ObjectId(userId);
+      await Course.updateMany(
+        {
+          _id: { $in: coursesId.map((id) => new mongoose.Types.ObjectId(id)) },
+        },
+        { $addToSet: { enrolledStudents: userObjectId } },
+      );
 
       return res.status(200).json({
         success: true,
