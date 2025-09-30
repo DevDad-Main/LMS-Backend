@@ -395,6 +395,8 @@ export const getCourseDetails = catchAsync(async (req, res) => {
     throw new AppError("Course Not Found", 404);
   }
 
+  console.log(course);
+
   const instructor = await Instructor.findById(course.instructor)
     .populate({ path: "createdCourses", select: "title subtitle" })
     .populate({

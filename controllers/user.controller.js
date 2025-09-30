@@ -382,10 +382,20 @@ export const getUsersDashboard = catchAsync(async (req, res) => {
     select: "course",
     populate: {
       path: "course",
+      populate: [
+        { path: "instructor" },
+        { path: "sections", populate: { path: "lectures" } },
+      ],
     },
   });
 
-  const courseProgress = await CourseProgress.find({ user: userId });
+  const courseProgress = await CourseProgress.find({ user: userId }).populate({
+    path: "course",
+    populate: {
+      path: "sections",
+      select: "lectures",
+    },
+  });
 
   if (!user) {
     throw new AppError("User Not Found", 404);

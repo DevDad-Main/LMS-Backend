@@ -115,7 +115,7 @@ export const initiateStripeCheckout = catchAsync(async (req, res) => {
       paymentMethod: "Card",
       currency: "USD",
       status: "pending",
-      paymentId: "51314534",
+      paymentId: " ",
     });
 
     await order.save({ session });
