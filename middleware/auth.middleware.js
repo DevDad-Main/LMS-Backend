@@ -41,6 +41,10 @@ export const isAuthenticated = catchAsync(async (req, res, next) => {
 export const isInstructorAuthenticated = catchAsync(async (req, res, next) => {
   // Check if token exists in cookies
   const token = req.cookies.instructorToken;
+
+  if (!token && req.cookies.token)
+    return res.json({ message: "No Need To Proceed" });
+
   if (!token) {
     throw new AppError(
       "You are not logged in. Please log in to get access.",
