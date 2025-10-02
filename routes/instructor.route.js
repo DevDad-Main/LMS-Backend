@@ -1,5 +1,8 @@
 import express from "express";
-import { isInstructorAuthenticated } from "../middleware/auth.middleware.js";
+import {
+  isAuthenticated,
+  isInstructorAuthenticated,
+} from "../middleware/auth.middleware.js";
 import { upload } from "../utils/multer.js";
 import {
   validateSignup,
@@ -13,6 +16,7 @@ import {
   getInstructorsCourses,
   signOutInstructor,
   getInstructorProfile,
+  getInstructorProfilePage,
   instructorRegisterWithForm,
   instructorLogin,
 } from "../controllers/instructor.controller.js";
@@ -27,6 +31,8 @@ router
     isInstructorAuthenticated,
     updateInstructorDetails,
   );
+
+router.get("/get/instructor/:id", isAuthenticated, getInstructorProfilePage);
 
 router.get(
   "/instructor-authenticated",

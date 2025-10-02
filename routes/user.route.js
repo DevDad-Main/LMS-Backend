@@ -8,11 +8,11 @@ import {
   createUserAccount,
   createUserAccountWithGoogle,
   deleteUserAccount,
-  getCurrentUserProfile,
   getEnrolledCourses,
   signOutUser,
   updateUserProfile,
   getUsersCart,
+  getUsersCompletedCourses,
 } from "../controllers/user.controller.js";
 import { isAuthenticated } from "../middleware/auth.middleware.js";
 import { upload } from "../utils/multer.js";
@@ -29,15 +29,18 @@ router.get("/signout", signOutUser);
 router.get("/user-authenticated", isAuthenticated, authenticateUser);
 router.get("/enrolled-courses", isAuthenticated, getEnrolledCourses);
 router.get("/cart/get", isAuthenticated, getUsersCart);
-router.get("/dashboard", isAuthenticated, getUsersDashboard);
+router.get(
+  "/dashboard",
+  isAuthenticated,
+  getUsersDashboard,
+  getUsersCompletedCourses,
+);
 
 router.post("/signup", validateSignup, createUserAccount);
 router.post("/google-login", createUserAccountWithGoogle);
 router.post("/signin", validateSignin, authenticateUser);
 router.post("/cart/add", isAuthenticated, addCourseToCart);
 
-// Profile routes
-router.get("/profile", isAuthenticated, getCurrentUserProfile);
 router.patch(
   "/profile",
   isAuthenticated,

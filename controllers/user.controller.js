@@ -115,6 +115,7 @@ export const createUserAccountWithGoogle = catchAsync(async (req, res) => {
       email,
       password: hashedPassword,
       authProvider: "google",
+      lastActive: Date.now(),
     });
   }
 
@@ -370,6 +371,10 @@ export const getUsersCart = catchAsync(async (req, res) => {
 //#endregion
 
 //#region Get Users Dashboard
+/**
+ * Get current users dashboard details
+ * @route GET /api/v1/users/dashboard
+ */
 export const getUsersDashboard = catchAsync(async (req, res) => {
   const userId = req.user?._id;
 
@@ -393,13 +398,22 @@ export const getUsersDashboard = catchAsync(async (req, res) => {
     throw new AppError("User Not Found", 404);
   }
 
-  const courseProgress = await CourseProgress.find({ user: userId }).populate({
-    path: "course",
-    populate: {
-      path: "sections",
-      select: "lectures",
-    },
+  const courseProgress = await CourseProgress.find({ user: userId })
+    .populate({
+      path: "course",
+      populate: {
+        path: "sections",
+        select: "lectures",
+      },
+    })
+    .sort({ createdAt: -1 });
+
+  const completedCourses = await CourseProgress.find({
+    user: req.user?._id,
+    isCompleted: true,
   });
+
+  console.log(completedCourses);
 
   return res.status(200).json({
     success: true,
@@ -411,11 +425,23 @@ export const getUsersDashboard = catchAsync(async (req, res) => {
 //#endregion
 
 /**
- * Get current user profile
- * @route GET /api/v1/users/profile
+ * Get current users completed courses
+ * @route GET /api/v1/users/dashboard
  */
-export const getCurrentUserProfile = catchAsync(async (req, res) => {
-  // TODO: Implement get current user profile functionality
+export const getUsersCompletedCourses = catchAsync(async (req, res) => {
+  const courseProgresses = await CourseProgress.find({
+    user: req.user?._id,
+    isCompleted: true,
+  });
+
+  if (!courseProgresses) {
+    throw new AppError("No Course Progresses Found", 404);
+  }
+
+  console.log(courseProgresses);
+  return res
+    .status(200)
+    .json({ success: true, courseProgresses, message: "DetailsFetched" });
 });
 
 /**

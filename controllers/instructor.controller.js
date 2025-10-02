@@ -271,7 +271,7 @@ export const getInstructorsCourses = catchAsync(async (req, res) => {
 });
 //#endregion
 
-//#region Update Instructor Details
+//#region Get Instructor Details
 export const getInstructorProfile = catchAsync(async (req, res) => {
   const instructorID = req.instructor?._id;
 
@@ -280,6 +280,24 @@ export const getInstructorProfile = catchAsync(async (req, res) => {
   }
 
   const instructor = await Instructor.findById(instructorID);
+
+  if (!instructor) {
+    throw new AppError("No Instructor Found", 404);
+  }
+
+  return res.status(200).json({ success: true, instructor });
+});
+//#endregion
+
+//#region Get Instructor Details
+export const getInstructorProfilePage = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  if (!isValidObjectId(id)) {
+    throw new AppError("Invalid ID", 400);
+  }
+
+  const instructor = await Instructor.findById(id).populate("createdCourses");
 
   if (!instructor) {
     throw new AppError("No Instructor Found", 404);
