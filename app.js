@@ -39,7 +39,7 @@ app.use(helmet()); // Set security HTTP headers
 // app.use(mongoSanitize()); // Data sanitization against NoSQL query injection
 // app.use(xss()); // Data sanitization against XSS
 app.use(hpp()); // Prevent HTTP Parameter Pollution
-app.use("/api", limiter); // Apply rate limiting to all routes
+// app.use("/api", limiter); // Apply rate limiting to all routes
 
 // Logging Middleware
 if (process.env.NODE_ENV === "development") {
