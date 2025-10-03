@@ -1,12 +1,10 @@
-import { catchAsync } from "../utils/catchAsync.js";
+import { catchAsync } from "../middleware/error.middleware.js";
 import { Note } from "../models/Note.model.js";
 import { AppError } from "../middleware/error.middleware.js";
 
 //#region Create Note
 export const createNote = catchAsync(async (req, res) => {
   const { content, timeStamp } = req.body;
-
-  console.log(req.body);
 
   if (!content || !timeStamp)
     throw new AppError("Content and Time Stamp are required", 400);
@@ -18,6 +16,10 @@ export const createNote = catchAsync(async (req, res) => {
   });
 
   if (!note) return res.status(400).json({ message: "Note not created" });
+
+  return res
+    .status(200)
+    .json({ success: true, note, message: "Note Created Successfully" });
 });
 //#endregion
 
