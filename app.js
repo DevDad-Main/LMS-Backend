@@ -28,17 +28,17 @@ const allowedOrigins = process.env.CLIENT_URL.split(",");
 
 //#region Middlewares
 // Global rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: "Too many requests from this IP, please try again later.",
-});
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 100, // Limit each IP to 100 requests per windowMs
+//   message: "Too many requests from this IP, please try again later.",
+// });
 
 // Security Middleware
 app.use(helmet()); // Set security HTTP headers
 // app.use(mongoSanitize()); // Data sanitization against NoSQL query injection
 // app.use(xss()); // Data sanitization against XSS
-// app.use(hpp()); // Prevent HTTP Parameter Pollution
+app.use(hpp()); // Prevent HTTP Parameter Pollution
 app.use("/api", limiter); // Apply rate limiting to all routes
 
 // Logging Middleware
