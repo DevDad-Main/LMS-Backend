@@ -8,8 +8,8 @@ import {
 
 const router = Router();
 
-router.post("/:courseId/add", isAuthenticated, createNote);
 router.get("/:courseId/notes", isAuthenticated, getNotes);
+router.post("/:courseId/add", isAuthenticated, createNote);
 router.delete("/:courseId/:noteId", isAuthenticated, deleteNote);
 
 export default router;

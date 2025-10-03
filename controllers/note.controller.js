@@ -36,7 +36,7 @@ export const getNotes = catchAsync(async (req, res) => {
   if (!isValidObjectId(courseId))
     throw new AppError("Course ID is invalid", 400);
 
-  const notes = await Note.find({ course: courseId });
+  const notes = await Note.find({ course: courseId }).sort({ createdAt: -1 });
 
   if (!notes) throw new AppError("No notes found for this course", 404);
 

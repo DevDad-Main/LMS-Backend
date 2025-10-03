@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const noteSchema = new mongoose.Schema(
   {
     content: { type: String, required: true },
-    timeStamp: { type: String },
+    timeStamp: { type: String, default: "00:00" },
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     course: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
   },
