@@ -399,6 +399,7 @@ export const getUsersDashboard = catchAsync(async (req, res) => {
   }
 
   const courseProgress = await CourseProgress.find({ user: userId })
+    .populate("completedLectures")
     .populate({
       path: "course",
       populate: {
@@ -413,12 +414,21 @@ export const getUsersDashboard = catchAsync(async (req, res) => {
     isCompleted: true,
   });
 
-  console.log(completedCourses);
+  const totalTimeLearning = courseProgress.reduce((acc, c) => {
+    const courseTime = c.completedLectures.reduce(
+      (acc, l) => acc + l.duration,
+      0,
+    );
+    return acc + courseTime;
+  }, 0);
+
+  console.log(totalTimeLearning);
 
   return res.status(200).json({
     success: true,
     user,
     courseProgress,
+    totalTimeLearning,
     message: "Dashboard Data Fetched",
   });
 });
