@@ -51,7 +51,21 @@ export const commonValidations = {
       "Password must contain at least one number, one uppercase letter, one lowercase letter, and one special character",
     ),
 
-  name: body("name")
+  // name: body("name")
+  //   .trim()
+  //   .isLength({ min: 2, max: 50 })
+  //   .withMessage("Name must be between 2 and 50 characters")
+  //   .matches(/^[a-zA-Z\s]*$/)
+  //   .withMessage("Name can only contain letters and spaces"),
+
+  firstName: body("firstName")
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage("Name must be between 2 and 50 characters")
+    .matches(/^[a-zA-Z\s]*$/)
+    .withMessage("Name can only contain letters and spaces"),
+
+  lastName: body("lastName")
     .trim()
     .isLength({ min: 2, max: 50 })
     .withMessage("Name must be between 2 and 50 characters")
@@ -68,7 +82,8 @@ export const commonValidations = {
 
 //#region User validation chains
 export const validateSignup = validate([
-  commonValidations.name,
+  commonValidations.firstName,
+  commonValidations.lastName,
   commonValidations.email,
   commonValidations.password,
 ]);

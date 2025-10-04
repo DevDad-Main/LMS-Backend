@@ -170,13 +170,47 @@ export const createUserAccountWithGoogle = catchAsync(async (req, res) => {
 });
 //#endregion
 
-/**
+//#region Create User With Non Google Signup
+/*
  * Create a new user account
  * @route POST /api/v1/users/signup
  */
-//#region Create User With Non Google Signup
 export const createUserAccount = catchAsync(async (req, res) => {
-  // TODO: Implement create user account functionality
+  const { firstName, lastName, email, password } = req.body;
+
+  console.log(req.body);
+
+  const existingUser = await User.findOne({ email });
+
+  if (existingUser) {
+    throw new AppError("User already exists", 400);
+  }
+
+  console.log(existingUser);
+  const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+
+  const user = await User.create({
+    name: `${firstName} ${lastName}`,
+    email,
+    password: hashedPassword,
+    authProvider: "local",
+  });
+
+  const { token } = await generateUserToken(user._id);
+
+  return res
+    .status(201)
+    .cookie("token", token, options)
+    .json({
+      success: true,
+      token,
+      user: {
+        name: user.name,
+        email: user.email,
+        authProvider: user.authProvider,
+      },
+      message: "User Created Successfully",
+    });
 });
 //#endregion
 
