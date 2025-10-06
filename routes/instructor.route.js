@@ -32,7 +32,7 @@ router
     updateInstructorDetails,
   );
 
-router.get("/get/instructor/:id", isAuthenticated, getInstructorProfilePage);
+router.get("/get/instructor/:id", getInstructorProfilePage);
 
 router.get(
   "/instructor-authenticated",
