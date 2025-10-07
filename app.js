@@ -15,10 +15,9 @@ import mediaRoute from "./routes/media.route.js";
 import purchaseRoute from "./routes/purchaseCourse.route.js";
 import courseProgressRoute from "./routes/courseProgress.route.js";
 import noteRoute from "./routes/note.route.js";
-//TODO: Change this to use stripe
-// import razorpayRoute from "./routes/razorpay.routes.js";
 import healthRoute from "./routes/health.routes.js";
 import stripeRoutes from "./routes/stripe.routes.js";
+import reviewRoute from "./routes/review.route.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 
 //#region Constants
@@ -28,11 +27,11 @@ const allowedOrigins = process.env.CLIENT_URL.split(",");
 
 //#region Middlewares
 // Global rate limiting
-// const limiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   max: 100, // Limit each IP to 100 requests per windowMs
-//   message: "Too many requests from this IP, please try again later.",
-// });
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: "Too many requests from this IP, please try again later.",
+});
 
 // Security Middleware
 app.use(helmet()); // Set security HTTP headers
@@ -79,6 +78,7 @@ app.use("/api/v1/purchase", purchaseRoute);
 app.use("/api/v1/progress", courseProgressRoute);
 app.use("/api/v1/stripe", stripeRoutes);
 app.use("/api/v1/note", noteRoute);
+app.use("/api/v1/review", reviewRoute);
 // app.use("/api/v1/razorpay", razorpayRoute);
 app.use("/health", healthRoute);
 //#endregion

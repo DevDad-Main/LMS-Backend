@@ -36,6 +36,7 @@ const courseProgressSchema = new mongoose.Schema(
     //   type: Boolean,
     //   default: false,
     // },
+    hasReview: { type: Boolean, default: false },
     completedLectures: [
       {
         type: mongoose.Schema.Types.ObjectId,
