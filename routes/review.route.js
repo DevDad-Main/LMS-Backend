@@ -13,6 +13,7 @@ router
   .route("/course/review/:id")
   .get(getReviews)
   .post(createReview)
-  .delete(deleteReview);
+
+router.delete("/course/:courseId/review/:id", deleteReview);
 
 export default router;

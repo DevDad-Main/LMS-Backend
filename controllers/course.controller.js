@@ -1,4 +1,5 @@
 import { Course } from "../models/Course.model.js";
+import {Review} from "../models/Review.model.js";
 import { CourseProgress } from "../models/CourseProgress.model.js";
 import { Section } from "../models/Section.model.js";
 import { Lecture } from "../models/Lecture.model.js";
@@ -404,6 +405,8 @@ export const getCourseDetails = catchAsync(async (req, res) => {
       select: "enrolledStudents",
     });
 
+  const reviews = await Review.find({ course: id }).populate("user");
+
   const totalStudents = instructor.studentCount.reduce(
     (sum, course) => sum + course.enrolledStudents.length,
     0,
@@ -437,6 +440,7 @@ export const getCourseDetails = catchAsync(async (req, res) => {
       thumbnail: course.thumbnail || "",
       instructor: instructor,
       totalStudents,
+      reviews,
       sections: course.sections.map((section) => ({
         _id: section._id,
         title: section.title,

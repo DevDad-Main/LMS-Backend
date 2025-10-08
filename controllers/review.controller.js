@@ -15,7 +15,7 @@ export const getReviews = catchAsync(async (req, res) => {
 
   return res.status(200).json({ success: true, reviews });
 });
-//#endregion;
+//#endregion
 
 //#region Create Review For Course
 export const createReview = catchAsync(async (req, res) => {
@@ -46,8 +46,28 @@ export const createReview = catchAsync(async (req, res) => {
 
   return res.status(201).json({ success: true, review });
 });
-//#endregion;
+//#endregion
 
 //#region Delete Review For Course
-export const deleteReview = catchAsync(async (req, res) => {});
+export const deleteReview = catchAsync(async (req, res) => {
+  const { id, courseId } = req.params;
+
+  if (!isValidObjectId(id) || !isValidObjectId(courseId)) throw new AppError("Invalid ObjectId", 400);
+
+
+  const review = await Review.findOneAndDelete({ _id: id });
+
+  if (!review) throw new AppError("Failed to delete review", 500);
+
+  const courseProgress = await CourseProgress.findOneAndUpdate(
+    { course: courseId, user: req.user?._id },
+    { $set: { hasReview: false } },
+  );
+
+  if (!courseProgress) {
+    throw new AppError("Failed to update course progress", 500);
+  }
+
+  return res.status(201).json({ success: true, message:"Review successfully deleted"});
+});
 //#endregion
