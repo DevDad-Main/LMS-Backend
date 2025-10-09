@@ -152,22 +152,6 @@ export const createNewCourse = catchAsync(async (req, res) => {
 });
 //#endregion
 
-/**
- * Search courses with filters
- * @route GET /api/v1/courses/search
- */
-export const searchCourses = catchAsync(async (req, res) => {
-  // TODO: Implement search courses functionality
-});
-
-/**
- * Get all published courses
- * @route GET /api/v1/courses/published
- */
-export const getPublishedCourses = catchAsync(async (req, res) => {
-  // TODO: Implement get published courses functionality
-});
-
 //#region Get Admin/Instructor Created Courses
 /**
  * Get courses created by the current user
@@ -364,6 +348,10 @@ export const updateCourseSection = catchAsync(async (req, res) => {
  * @route GET /api/v1/courses/:courseId
  */
 export const getCourseDetails = catchAsync(async (req, res) => {
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+
   const { id } = req.params;
   const userId = req.user?._id;
 
@@ -380,32 +368,22 @@ export const getCourseDetails = catchAsync(async (req, res) => {
         select: "title videoUrl _id duration",
       },
     })
-    // .populate({
-    //   path: "instructor",
-    //   select: "name bio profession expertise avatar createdCourses",
-    //   populate: {
-    //     path: "createdCourses",
-    //     select: "title subtitle",
-    //   },
-    // })
     .select(
       "title description category level price thumbnail sections instructor subtitle requirements learnableSkills enrolledStudents lastUpdated tags languages",
-    );
+    ).session(session);
 
   if (!course) {
     throw new AppError("Course Not Found", 404);
   }
-
-  console.log(course);
 
   const instructor = await Instructor.findById(course.instructor)
     .populate({ path: "createdCourses", select: "title subtitle" })
     .populate({
       path: "studentCount",
       select: "enrolledStudents",
-    });
+    }).session(session);
 
-  const reviews = await Review.find({ course: id }).populate("user");
+  const reviews = await Review.find({ course: id }).populate("user").session(session);
 
   const totalStudents = instructor.studentCount.reduce(
     (sum, course) => sum + course.enrolledStudents.length,
@@ -416,9 +394,13 @@ export const getCourseDetails = catchAsync(async (req, res) => {
   const userCourseProgress = await CourseProgress.findOne({
     user: userId,
     course: id,
-  });
+  }).session(session);
 
   const completedLectures = userCourseProgress?.completedLectures || [];
+
+  await session.commitTransaction();
+  session.endSession();
+
 
   return res.status(200).json({
     success: true,
@@ -455,6 +437,11 @@ export const getCourseDetails = catchAsync(async (req, res) => {
     },
     completedLectures,
   });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new AppError(error.message, error.status);
+  }
 });
 //#endregion
 
@@ -546,16 +533,6 @@ export const addLectureToCourseAndSection = catchAsync(async (req, res) => {
       duration: lecture.duration,
     },
   });
-});
-//#endregion
-
-//#region Get Course Lectures
-/**
- * Get course lectures
- * @route GET /api/v1/courses/:courseId/lectures
- */
-export const getCourseLectures = catchAsync(async (req, res) => {
-  // TODO: Implement get course lectures functionality
 });
 //#endregion
 

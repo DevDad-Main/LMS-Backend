@@ -2,20 +2,16 @@ import express from "express";
 import {
   isAuthenticated,
   isInstructorAuthenticated,
-  restrictTo,
 } from "../middleware/auth.middleware.js";
 import {
   createNewCourse,
   deleteCourse,
   addSection,
   updateLastAccessed,
-  searchCourses,
-  getPublishedCourses,
   getCourses,
   updateCourseDetails,
   getCourseDetails,
   addLectureToCourseAndSection,
-  getCourseLectures,
   toggleLectureCompletion,
   updateCourseSection,
   updateCourseLecture,
@@ -28,7 +24,6 @@ import { upload } from "../utils/multer.js";
 const router = express.Router();
 
 // Public routes
-router.get("/published", getPublishedCourses);
 router.get("/all", getCoursesByCriteria);
 router.get("/courses", getCourses);
 
@@ -48,7 +43,8 @@ router
 
 router.route("/learn/c/:id").get(isAuthenticated, getCourseDetails);
 
-router.route("/c/:courseId").get(getCourseLectures).delete(deleteCourse);
+// router.route("/c/:courseId").get(getCourseLectures).delete(deleteCourse);
+router.route("/c/:courseId").delete(deleteCourse);
 
 router.post("/c/:id/last-accessed", isAuthenticated, updateLastAccessed);
 
@@ -64,8 +60,6 @@ router.post(
   upload.none(),
   addSection,
 );
-// router.put("/:courseId/update-section/:sectionId", protect, updateSection);
-// router.delete("/:courseId/delete-section/:sectionId", protect, deleteSection);
 
 // Lecture routes
 router.post(
@@ -106,7 +100,5 @@ router.delete(
   isInstructorAuthenticated,
   deleteLecture,
 );
-
-// router.delete("/:courseId/delete-lecture/:lectureId", protect, deleteLecture);
 
 export default router;
