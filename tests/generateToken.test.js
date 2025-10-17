@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import generateUserToken from "../utils/generateToken.js";
+import generateUserToken, {
+  generateInstructorToken,
+} from "../utils/generateToken.js";
 import { User } from "../models/User.model.js";
+import { Instructor } from "../models/Instructor.model.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { AppError } from "../middleware/error.middleware.js";
@@ -10,6 +13,12 @@ process.env.JWT_SECRET = "testsecret";
 
 vi.mock("../models/User.model.js", () => ({
   User: {
+    findById: vi.fn(),
+  },
+}));
+
+vi.mock("../models/Instructor.model.js", () => ({
+  Instructor: {
     findById: vi.fn(),
   },
 }));
@@ -62,5 +71,32 @@ describe("generateUserToken()", () => {
     const invalidUserId = undefined;
 
     await expect(generateUserToken(invalidUserId)).rejects.toThrow(AppError);
+  });
+});
+
+describe("generateInstructorToken()", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should generate a token for a valid instructor", async () => {
+    const instructorId = new mongoose.Types.ObjectId().toString();
+    const mockInstructor = { _id: instructorId };
+
+    //NOTE: Mock Resolved is used for async -> we tell this vi.fn to return a promise
+    Instructor.findById.mockResolvedValue(mockInstructor);
+    //NOTE: Mock Return is used for sync code
+    jwt.sign.mockReturnValue("instructorToken");
+
+    const result = await generateInstructorToken(instructorId);
+
+    expect(Instructor.findById).toHaveBeenCalledWith(instructorId);
+    expect(jwt.sign).toHaveBeenCalledWith(
+      { _id: instructorId },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" },
+    );
+
+    expect(result).toEqual({ token: "intstructorToken" });
   });
 });
