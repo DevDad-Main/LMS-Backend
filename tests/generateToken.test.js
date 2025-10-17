@@ -20,7 +20,6 @@ vi.mock("../models/User.model.js", () => ({
 vi.mock("../models/Instructor.model.js", () => ({
   Instructor: {
     findById: vi.fn(),
-    select: vi.fn(),
   },
 }));
 
@@ -104,5 +103,29 @@ describe("generateInstructorToken()", () => {
     );
 
     expect(result).toEqual({ token: "instructorToken" });
+  });
+
+  it("should throw AppError if instructorId is invalid", async () => {
+    const invalidUserId = "invalidUserId";
+
+    await expect(generateInstructorToken(invalidUserId)).rejects.toThrow(
+      AppError,
+    );
+  });
+
+  it("should throw AppError if instructorId is an empty value", async () => {
+    const invalidUserId = "  ";
+
+    await expect(generateInstructorToken(invalidUserId)).rejects.toThrow(
+      AppError,
+    );
+  });
+
+  it("should throw AppError if instructorId is undefined", async () => {
+    const invalidUserId = undefined;
+
+    await expect(generateInstructorToken(invalidUserId)).rejects.toThrow(
+      AppError,
+    );
   });
 });
