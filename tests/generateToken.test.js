@@ -45,4 +45,22 @@ describe("generateUserToken()", () => {
 
     expect(result).toEqual({ token: "token" });
   });
+
+  it("should throw AppError if userId is invalid", async () => {
+    const invalidUserId = "invalidUserId";
+
+    await expect(generateUserToken(invalidUserId)).rejects.toThrow(AppError);
+  });
+
+  it("should throw AppError if userId is an empty value", async () => {
+    const invalidUserId = "  ";
+
+    await expect(generateUserToken(invalidUserId)).rejects.toThrow(AppError);
+  });
+
+  it("should throw AppError if userId is undefined", async () => {
+    const invalidUserId = undefined;
+
+    await expect(generateUserToken(invalidUserId)).rejects.toThrow(AppError);
+  });
 });
