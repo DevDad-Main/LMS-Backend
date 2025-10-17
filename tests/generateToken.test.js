@@ -20,6 +20,7 @@ vi.mock("../models/User.model.js", () => ({
 vi.mock("../models/Instructor.model.js", () => ({
   Instructor: {
     findById: vi.fn(),
+    select: vi.fn(),
   },
 }));
 
@@ -83,8 +84,13 @@ describe("generateInstructorToken()", () => {
     const instructorId = new mongoose.Types.ObjectId().toString();
     const mockInstructor = { _id: instructorId };
 
-    //NOTE: Mock Resolved is used for async -> we tell this vi.fn to return a promise
-    Instructor.findById.mockResolvedValue(mockInstructor);
+    //#region: NOTE: Mock Resolved is used for async -> we tell this vi.fn to return a promise. Now with this Instructor becasue in the method we are chaining a select to just return the _id, we need to now chain our mock return values
+
+    //#endregion
+    Instructor.findById.mockReturnValue({
+      select: vi.fn().mockResolvedValue(mockInstructor),
+    });
+
     //NOTE: Mock Return is used for sync code
     jwt.sign.mockReturnValue("instructorToken");
 
@@ -97,6 +103,6 @@ describe("generateInstructorToken()", () => {
       { expiresIn: "1d" },
     );
 
-    expect(result).toEqual({ token: "intstructorToken" });
+    expect(result).toEqual({ token: "instructorToken" });
   });
 });
