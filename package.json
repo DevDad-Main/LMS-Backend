@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "vitest --run --reporter verbose"
   },
   "keywords": [],
   "author": "Dev Dad",
@@ -33,6 +34,7 @@
     "streamifier": "^0.1.1",
     "stripe": "^14.14.0",
     "uuid": "^13.0.0",
+    "vitest": "^3.2.4",
     "xss-clean": "^0.1.4"
   }
 }
