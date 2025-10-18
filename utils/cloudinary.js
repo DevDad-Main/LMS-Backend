@@ -21,6 +21,14 @@ export const uploadBufferToCloudinary = async (
   resourceType = "image",
 ) => {
   return new Promise((resolve, reject) => {
+    //NOTE: Null checks then we reject the promise and makes it easier to handle the unit tests so we can check for these rejects
+    if (!buffer) {
+      return reject(new Error("Missing buffer data"));
+    }
+    if (!folderId) {
+      return reject(new Error("Missing folderId"));
+    }
+
     const stream = cloudinary.uploader.upload_stream(
       { folder: `LearnHub/${folderId}`, resource_type: resourceType },
       (error, result) => {

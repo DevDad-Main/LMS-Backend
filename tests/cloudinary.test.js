@@ -61,4 +61,19 @@ describe("uploadBufferToCloudinary()", () => {
       uploadBufferToCloudinary(buffer, "test-folder"),
     ).rejects.toThrow("Cloudinary Upload Error");
   });
+
+  it("should reject if the buffer is missing", async () => {
+    await expect(
+      uploadBufferToCloudinary(undefined, "test-folder"),
+    ).rejects.toThrow("Missing buffer data");
+  });
+
+  it("should reject if the folderId is missing", async () => {
+    const buffer = Buffer.from("test-image");
+    console.log(buffer);
+
+    await expect(uploadBufferToCloudinary(buffer, undefined)).rejects.toThrow(
+      "Missing folderId",
+    );
+  });
 });
