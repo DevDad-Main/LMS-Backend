@@ -62,6 +62,8 @@ export const getPublicIdFromUrl = (url) => {
  * @returns Promise on whether we have deleted the file or not
  */
 export const deleteImageFromCloudinary = (publicId, resourceType = "image") => {
+  if (!publicId || typeof publicId !== "string")
+    throw new Error("Invalid publicId");
   //NOTE: Sanity check to see if we are getting the correct response from Cloudinary tests;
   // return "oops";
   return cloudinary.uploader.destroy(publicId, { resource_type: resourceType });

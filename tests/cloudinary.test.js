@@ -160,5 +160,19 @@ describe("deleteImageFromCloudinary()", () => {
       resource_type: resourceType,
     });
   });
+
+  it("should throw an error if the publicId is undefined", async () => {
+    expect(() => deleteImageFromCloudinary(undefined)).toThrowError(
+      "Invalid publicId",
+    );
+  });
+
+  it("should throw an error if the publicId is not a string", () => {
+    const publicId = 123;
+
+    expect(() => deleteImageFromCloudinary(publicId)).toThrowError(
+      "Invalid publicId",
+    );
+  });
 });
 //#endregion
