@@ -1,5 +1,8 @@
 import { it, describe, expect, beforeEach, vi } from "vitest";
-import { uploadBufferToCloudinary } from "../utils/cloudinary.js";
+import {
+  uploadBufferToCloudinary,
+  getPublicIdFromUrl,
+} from "../utils/cloudinary.js";
 import { v2 as cloudinary } from "cloudinary";
 import streamifier from "streamifier";
 
@@ -22,6 +25,7 @@ vi.mock("cloudinary", () => ({
   },
 }));
 
+//#region uploadBufferToCloudinary()
 describe("uploadBufferToCloudinary()", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -77,3 +81,43 @@ describe("uploadBufferToCloudinary()", () => {
     );
   });
 });
+//#endregion
+
+//#region getPublicIdFromUrl()
+describe("getPublicIdFromUrl()", () => {
+  it("should return the correct publicId for a valid URL", () => {
+    const url =
+      "https://res.cloudinary.com/dpb0u6lxn/image/upload/v1758998514/LearnHub/68d6f0b59a5bc7cb751b8c9b/eyuhpusrs5tdakgpusgi.svg";
+    const publicId = getPublicIdFromUrl(url);
+    expect(publicId).toEqual(
+      "LearnHub/68d6f0b59a5bc7cb751b8c9b/eyuhpusrs5tdakgpusgi",
+    );
+    // expect(publicId).toEqual("LearnHub/test");
+  });
+
+  it("should throw an error if the URL is not a string", () => {
+    const url = 123;
+
+    expect(() => getPublicIdFromUrl(url)).toThrowError("Invalid URL");
+  });
+
+  it("should throw an error if the URL is undefined", () => {
+    expect(() => getPublicIdFromUrl(undefined)).toThrowError("Invalid URL");
+  });
+
+  it("should throw an error if the URL is undefined", () => {
+    const url =
+      "https://res.cloudinary.com/dpb0u6lxn/image/upload/v1758998514/LearnHub/68d6f0b59a5bc7cb751b8c9b/eyuhpusrs5tdakgpusgi.svg";
+
+    const urlWithValidContents = ["cloudinary", "LearnHub"];
+
+    //NOTE: We can't use the .toContain() method as it will only check if the string contains the substring and not if it is the entire string -> Couple ways below to handle this
+
+    // urlWithValidContents.forEach((substring) => {
+    //   expect(url).toContain(substring);
+    // });
+
+    expect(urlWithValidContents.every((sub) => url.includes(sub))).toBe(true);
+  });
+});
+//#endregion

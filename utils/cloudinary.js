@@ -43,6 +43,9 @@ export const uploadBufferToCloudinary = async (
 
 //#region Get Public ID from URL
 export const getPublicIdFromUrl = (url) => {
+  if (!url || typeof url !== "string" || !url.includes("cloudinary"))
+    throw new Error("Invalid URL");
+
   const parts = url.split("/");
   const fileWithExtension = parts.pop(); // 'filename.jpg'
   const folder = parts.slice(-2).join("/"); // 'LearnHub/folderId'
