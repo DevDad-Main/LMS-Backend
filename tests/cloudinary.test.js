@@ -2,6 +2,7 @@ import { it, describe, expect, beforeEach, vi } from "vitest";
 import {
   uploadBufferToCloudinary,
   getPublicIdFromUrl,
+  deleteImageFromCloudinary,
 } from "../utils/cloudinary.js";
 import { v2 as cloudinary } from "cloudinary";
 import streamifier from "streamifier";
@@ -21,6 +22,7 @@ vi.mock("cloudinary", () => ({
     config: vi.fn(),
     uploader: {
       upload_stream: vi.fn(),
+      destroy: vi.fn(),
     },
   },
 }));
@@ -118,6 +120,45 @@ describe("getPublicIdFromUrl()", () => {
     // });
 
     expect(urlWithValidContents.every((sub) => url.includes(sub))).toBe(true);
+  });
+});
+//#endregion
+
+//#region deleteImageFromCloudinary()
+describe("deleteImageFromCloudinary()", () => {
+  it("should resolve if we successfully delete the image from Cloudinary", async () => {
+    const mockResult = {
+      result: "ok",
+    };
+
+    cloudinary.uploader.destroy.mockResolvedValue(mockResult);
+
+    const publicId = "test-public-id";
+    const resourceType = "image";
+
+    const result = await deleteImageFromCloudinary(publicId, resourceType);
+
+    expect(result).toEqual(mockResult);
+    expect(cloudinary.uploader.destroy).toHaveBeenCalledWith(publicId, {
+      resource_type: resourceType,
+    });
+  });
+
+  it("should reject if Cloudinary deletion fails", async () => {
+    const mockError = new Error("Cloudinary Deletion Error");
+
+    cloudinary.uploader.destroy.mockRejectedValue(mockError);
+
+    const publicId = "test-public-id";
+    const resourceType = "image";
+
+    await expect(
+      deleteImageFromCloudinary(publicId, resourceType),
+    ).rejects.toThrow("Cloudinary Deletion Error");
+
+    expect(cloudinary.uploader.destroy).toHaveBeenCalledWith(publicId, {
+      resource_type: resourceType,
+    });
   });
 });
 //#endregion

@@ -61,10 +61,9 @@ export const getPublicIdFromUrl = (url) => {
  * @param {string} resourceType
  * @returns Promise on whether we have deleted the file or not
  */
-export const deleteImageFromCloudinary = async (
-  publicId,
-  resourceType = "image",
-) => {
+export const deleteImageFromCloudinary = (publicId, resourceType = "image") => {
+  //NOTE: Sanity check to see if we are getting the correct response from Cloudinary tests;
+  // return "oops";
   return cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
 };
 //#endregion
