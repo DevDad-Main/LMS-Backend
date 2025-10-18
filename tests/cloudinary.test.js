@@ -44,4 +44,21 @@ describe("uploadBufferToCloudinary()", () => {
 
     expect(result).toEqual(mockResult);
   });
+
+  it("should reject if Cloudinary upload fails", async () => {
+    const mockError = new Error("Cloudinary Upload Error");
+    const mockStream = { write: vi.fn(), end: vi.fn() };
+
+    cloudinary.uploader.upload_stream.mockImplementation((_, cb) => {
+      // Simulate our successful upload
+      cb(mockError, null);
+      return mockStream;
+    });
+
+    const buffer = Buffer.from("test-image");
+    //NOTE: Handle the expect like this as if we do like above ironically our test fails because the promise gets unwrapped before we even get to the expectation. So we await it and do the expect check in one go when we unwrap it.
+    await expect(
+      uploadBufferToCloudinary(buffer, "test-folder"),
+    ).rejects.toThrow("Cloudinary Upload Error");
+  });
 });
