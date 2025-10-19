@@ -4,7 +4,7 @@ import { User } from "../models/User.model.js";
 import "./setup/mongodb.js";
 
 //#region User model Test Suite
-describe("User model", () => {
+describe("User Model", () => {
   it("should hash the password before saving", async () => {
     const user = new User({
       name: "John Doe",

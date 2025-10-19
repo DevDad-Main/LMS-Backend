@@ -147,6 +147,9 @@ courseSchema.virtual("duration").get(function () {
 //#region Limit Array Validation
 function limitArray(limit) {
   return function (value) {
+    if (value.length > limit) {
+      throw new Error(`Cannot have more than ${limit} items`);
+    }
     return value.length <= limit;
   };
 }
