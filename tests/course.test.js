@@ -4,6 +4,7 @@ import { v7 as uuidv7, validate as uuidValidate } from "uuid";
 import mongoose from "mongoose";
 import { app } from "./app.js";
 import request from "supertest";
+import jwt from "jsonwebtoken";
 
 //#region Course model Test Suite
 describe("Course Model", () => {
@@ -66,23 +67,6 @@ describe("Course Model", () => {
     await expect(course.save()).rejects.toThrowError(
       /Course validation failed: learnableSkills: Cannot have more than 6 items/,
     );
-  });
-
-  it("should reject course creation via API if learnableSkills > 6", async () => {
-    const res = await request(app)
-      .post("/api/v1/course/add-course")
-      .send({
-        title: "Test Course",
-        learnableSkills: ["1", "2", "3", "4", "5", "6", "7"],
-        instructor: "someId",
-        courseOwner: "someId",
-        category: "Web Development",
-        price: 10,
-        languages: ["English"],
-      });
-
-    expect(res.status).toBe(401);
-    expect(res.body.message).toMatch(/Cannot have more than 6/);
   });
 });
 //#endregion

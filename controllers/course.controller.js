@@ -1,5 +1,5 @@
 import { Course } from "../models/Course.model.js";
-import {Review} from "../models/Review.model.js";
+import { Review } from "../models/Review.model.js";
 import { CourseProgress } from "../models/CourseProgress.model.js";
 import { Section } from "../models/Section.model.js";
 import { Lecture } from "../models/Lecture.model.js";
@@ -352,91 +352,94 @@ export const getCourseDetails = catchAsync(async (req, res) => {
   try {
     session.startTransaction();
 
-  const { id } = req.params;
-  const userId = req.user?._id;
+    const { id } = req.params;
+    const userId = req.user?._id;
 
-  if (!isValidObjectId(id)) {
-    throw new AppError("Invalid Course ID", 404);
-  }
+    if (!isValidObjectId(id)) {
+      throw new AppError("Invalid Course ID", 404);
+    }
 
-  const course = await Course.findById(id)
-    .populate({
-      path: "sections",
-      select: "title _id",
-      populate: {
-        path: "lectures",
-        select: "title videoUrl _id duration",
-      },
-    })
-    .select(
-      "title description category level price thumbnail sections instructor subtitle requirements learnableSkills enrolledStudents lastUpdated tags languages",
-    ).session(session);
+    const course = await Course.findById(id)
+      .populate({
+        path: "sections",
+        select: "title _id",
+        populate: {
+          path: "lectures",
+          select: "title videoUrl _id duration",
+        },
+      })
+      .select(
+        "title description category level price thumbnail sections instructor subtitle requirements learnableSkills enrolledStudents lastUpdated tags languages",
+      )
+      .session(session);
 
-  if (!course) {
-    throw new AppError("Course Not Found", 404);
-  }
+    if (!course) {
+      throw new AppError("Course Not Found", 404);
+    }
 
-  const instructor = await Instructor.findById(course.instructor)
-    .populate({ path: "createdCourses", select: "title subtitle" })
-    .populate({
-      path: "studentCount",
-      select: "enrolledStudents",
+    const instructor = await Instructor.findById(course.instructor)
+      .populate({ path: "createdCourses", select: "title subtitle" })
+      .populate({
+        path: "studentCount",
+        select: "enrolledStudents",
+      })
+      .session(session);
+
+    const reviews = await Review.find({ course: id })
+      .populate("user")
+      .session(session);
+
+    const totalStudents = instructor.studentCount.reduce(
+      (sum, course) => sum + course.enrolledStudents.length,
+      0,
+    );
+
+    // Fetch user's completed lectures for this course
+    const userCourseProgress = await CourseProgress.findOne({
+      user: userId,
+      course: id,
     }).session(session);
 
-  const reviews = await Review.find({ course: id }).populate("user").session(session);
+    const completedLectures = userCourseProgress?.completedLectures || [];
 
-  const totalStudents = instructor.studentCount.reduce(
-    (sum, course) => sum + course.enrolledStudents.length,
-    0,
-  );
+    await session.commitTransaction();
+    session.endSession();
 
-  // Fetch user's completed lectures for this course
-  const userCourseProgress = await CourseProgress.findOne({
-    user: userId,
-    course: id,
-  }).session(session);
-
-  const completedLectures = userCourseProgress?.completedLectures || [];
-
-  await session.commitTransaction();
-  session.endSession();
-
-
-  return res.status(200).json({
-    success: true,
-    course: {
-      _id: course._id,
-      title: course.title,
-      subtitle: course.subtitle,
-      description: course.description,
-      category: course.category,
-      level: course.level,
-      price: course.price,
-      enrolledStudents: course.enrolledStudents.length,
-      duration: course.duration, // Explicitly call virtual
-      lastUpdated: course.lastUpdated,
-      requirements: course.requirements,
-      learnableSkills: course.learnableSkills,
-      tags: course.tags,
-      languages: course.languages,
-      thumbnail: course.thumbnail || "",
-      instructor: instructor,
-      totalStudents,
-      reviews,
-      sections: course.sections.map((section) => ({
-        _id: section._id,
-        title: section.title,
-        lectures: section.lectures.map((lecture) => ({
-          _id: lecture._id,
-          title: lecture.title,
-          video: lecture.videoUrl || "",
-          duration: lecture.duration,
-          isCompleted: completedLectures.includes(lecture._id.toString()), // <-- toggle
+    return res.status(200).json({
+      success: true,
+      course: {
+        _id: course._id,
+        title: course.title,
+        subtitle: course.subtitle,
+        description: course.description,
+        category: course.category,
+        level: course.level,
+        price: course.price,
+        enrolledStudents: course.enrolledStudents.length,
+        duration: course.duration, // Explicitly call virtual
+        lastUpdated: course.lastUpdated,
+        requirements: course.requirements,
+        learnableSkills: course.learnableSkills,
+        tags: course.tags,
+        languages: course.languages,
+        thumbnail: course.thumbnail || "",
+        instructor: instructor,
+        totalStudents,
+        reviews,
+        sections: course.sections.map((section) => ({
+          _id: section._id,
+          title: section.title,
+          lectures: section.lectures.map((lecture) => ({
+            _id: lecture._id,
+            title: lecture.title,
+            video: lecture.videoUrl || "",
+            duration: lecture.duration,
+            isCompleted: completedLectures.includes(lecture._id.toString()), // <-- toggle
+          })),
         })),
-      })),
-    },
-    completedLectures,
-  });
+      },
+      completedLectures,
+    });
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
