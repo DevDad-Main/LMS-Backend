@@ -36,5 +36,9 @@
     "uuid": "^13.0.0",
     "vitest": "^3.2.4",
     "xss-clean": "^0.1.4"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^10.2.3",
+    "supertest": "^7.1.4"
   }
 }
