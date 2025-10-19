@@ -40,8 +40,8 @@ app.use(helmet()); // Set security HTTP headers
 app.use(hpp()); // Prevent HTTP Parameter Pollution
 // app.use("/api", limiter); // Apply rate limiting to all routes
 
-// Logging Middleware
-if (process.env.NODE_ENV === "development") {
+const env = process.env.NODE_ENV || "development"; // fallback
+if (env === "development") {
   app.use(morgan("dev"));
 }
 

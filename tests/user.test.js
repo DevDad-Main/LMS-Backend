@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import bcrypt from "bcryptjs";
 import { User } from "../models/User.model.js";
-import "./setup/mongodb.js";
 
 //#region User model Test Suite
 describe("User Model", () => {
