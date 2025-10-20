@@ -268,5 +268,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Upcoming Features
 
-- [ ] **User Controllers** - Complete last controllers
 - [ ] **E2E Tests** - End-to-end workflow testing
