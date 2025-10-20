@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "test": "vitest --run --reporter verbose"
+    "test": "vitest --run --reporter verbose",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [],
   "author": "Dev Dad",
@@ -38,6 +40,7 @@
     "xss-clean": "^0.1.4"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.4",
     "mongodb-memory-server": "^10.2.3",
     "supertest": "^7.1.4"
   }
