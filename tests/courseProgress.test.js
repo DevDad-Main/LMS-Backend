@@ -31,9 +31,7 @@ const course = {
   ],
 };
 
-const calculateCompletion = () => {
-  const completedLectures = [1, 2, 3];
-
+const calculateCompletion = (completedLectures) => {
   const totalLectures = course?.sections?.reduce(
     (acc, s) => acc + (s.lectures?.length || 0),
     0,
@@ -46,7 +44,14 @@ const calculateCompletion = () => {
 //#region CourseProgress Model Test Suite
 describe("CourseProgress Model", () => {
   it("should calculate the completion percentage correctly", () => {
-    expect(calculateCompletion()).toBe(30);
+    const completedLectures = [1, 2, 3];
+    expect(calculateCompletion(completedLectures)).toBeTypeOf("number");
+    expect(calculateCompletion(completedLectures)).toBe(30);
+  });
+
+  it("should return 0 if there are no lectures for the course", () => {
+    const completedLectures = [];
+    expect(calculateCompletion(completedLectures)).toBe(0);
   });
 });
 //#endregion
