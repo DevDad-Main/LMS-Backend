@@ -46,14 +46,6 @@ export const getNotes = catchAsync(async (req, res) => {
 });
 //#endregion
 
-//#region Get Note
-export const getNote = catchAsync(async (req, res) => {});
-//#endregion
-
-//#region Update Note
-export const updateNote = catchAsync(async (req, res) => {});
-//#endregion
-
 //#region Delete Note
 export const deleteNote = catchAsync(async (req, res) => {
   const { noteId } = req.params;

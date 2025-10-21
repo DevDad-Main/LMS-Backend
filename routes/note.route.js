@@ -8,7 +8,8 @@ import {
 
 const router = Router();
 
-router.get("/:courseId/notes", isAuthenticated, getNotes);
+router.get("/:courseId/notes", getNotes);
+// router.get("/:courseId/notes", isAuthenticated, getNotes);
 router.post("/:courseId/add", isAuthenticated, createNote);
 router.delete("/:courseId/:noteId", isAuthenticated, deleteNote);
 
