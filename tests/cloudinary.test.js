@@ -76,7 +76,7 @@ describe("uploadBufferToCloudinary()", () => {
 
   it("should reject if the folderId is missing", async () => {
     const buffer = Buffer.from("test-image");
-    console.log(buffer);
+    // console.log(buffer);
 
     await expect(uploadBufferToCloudinary(buffer, undefined)).rejects.toThrow(
       "Missing folderId",
