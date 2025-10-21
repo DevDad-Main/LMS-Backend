@@ -22,17 +22,17 @@ describe("GET /api/v1/note/:courseId/notes", () => {
 
     const notes = [{ title: "Test Note 1" }, { title: "Test Note 2" }];
 
-    Note.find.mockResolvedValue({
+    Note.find.mockReturnValue({
       sort: vi.fn().mockResolvedValue(notes),
     });
 
     const response = await request(app).get(`/api/v1/note/${courseId}/notes`);
 
-    console.log(response.body.data);
+    console.log(response.body.notes);
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
-    expect(response.body.data).toHaveLength(2);
+    expect(response.body.notes).toHaveLength(2);
     expect(Note.find).toHaveBeenCalled();
   });
 });
