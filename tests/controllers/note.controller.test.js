@@ -2,12 +2,27 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { Note } from "../../models/Note.model.js";
 import { User } from "../../models/User.model.js";
 import request from "supertest";
-import { app } from "../../app.js";
 import mongoose, { isValidObjectId } from "mongoose";
+// import { isAuthenticated } from "../../middleware/auth.middleware.js";
+
+vi.mock("../../middleware/auth.middleware.js", () => ({
+  isAuthenticated: (req, res, next) => {
+    req.user = { _id: "mockUserId" }; // pretend a user is logged in
+    next();
+  },
+  //NOTE: We need to mock the isInstructorAuthenticated middleware as well due to an error in our other routes that use it
+  isInstructorAuthenticated: (req, res, next) => {
+    req.instructor = { _id: "mockInstructorId" }; // pretend an instructor is logged in
+    next();
+  },
+}));
+
+import { app } from "../../app.js";
 
 vi.mock("../../models/Note.model.js", () => ({
   Note: {
     find: vi.fn(),
+    create: vi.fn(),
   },
 }));
 
@@ -34,6 +49,36 @@ describe("GET /api/v1/note/:courseId/notes", () => {
     expect(response.body.success).toBe(true);
     expect(response.body.notes).toHaveLength(2);
     expect(Note.find).toHaveBeenCalled();
+  });
+
+  it("should create a new note and return it back to the frontend", async () => {
+    const courseId = new mongoose.Types.ObjectId();
+    // Content is the only required field
+    const note = {
+      content: "Test Content",
+      timeStamp: "00:00",
+      course: courseId,
+      user: "mockUserId",
+    };
+
+    Note.create.mockResolvedValue(note);
+
+    const response = await request(app)
+      .post(`/api/v1/note/${courseId}/add`)
+      .send(note);
+
+    console.log(response.body.note);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.note).toEqual({
+      ...note,
+      course: courseId.toString(),
+    });
+    expect(Note.create).toHaveBeenCalledWith({
+      ...note,
+      course: courseId.toString(),
+    });
   });
 });
 //#endregion
