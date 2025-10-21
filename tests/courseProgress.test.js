@@ -41,6 +41,9 @@ const calculateCompletion = (completedLectures) => {
   return Math.round((completedCount / totalLectures) * 100);
 };
 
+const completionPercentage = () => calculateCompletion([1, 2, 3, 4, 5]);
+const isCompleted = () => calculateCompletion([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+
 //#region CourseProgress Model Test Suite
 describe("CourseProgress Model", () => {
   it("should calculate the completion percentage correctly", () => {
@@ -52,6 +55,14 @@ describe("CourseProgress Model", () => {
   it("should return 0 if there are no lectures for the course", () => {
     const completedLectures = [];
     expect(calculateCompletion(completedLectures)).toBe(0);
+  });
+
+  it("should return us the completionPercentage virtual", () => {
+    expect(completionPercentage()).toBe(50);
+  });
+
+  it("should return us the isCompleted virtual to equal 100%", () => {
+    expect(isCompleted()).toBe(100);
   });
 });
 //#endregion
