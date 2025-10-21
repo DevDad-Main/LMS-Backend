@@ -2,12 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import mongoose from "mongoose";
 import { CourseProgress } from "../models/CourseProgress.model.js";
 
-// vi.mock("../models/CourseProgress.model.js", () => ({
-//   CourseProgress: {
-//     calculateCompletion: vi.fn(),
-//     // completionPercentage: vi.fn(),
-//   },
-// }));
 const course = {
   sections: [
     {
@@ -44,8 +38,21 @@ const calculateCompletion = (completedLectures) => {
 const completionPercentage = () => calculateCompletion([1, 2, 3, 4, 5]);
 const isCompleted = () => calculateCompletion([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 
+const toggleLecture = (lectureId, completedLectures) => {
+  if (completedLectures.includes(lectureId)) {
+    completedLectures.splice(completedLectures.indexOf(lectureId), 1);
+  } else {
+    completedLectures.push(lectureId);
+  }
+  return completedLectures;
+};
+
 //#region CourseProgress Model Test Suite
 describe("CourseProgress Model", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("should calculate the completion percentage correctly", () => {
     const completedLectures = [1, 2, 3];
     expect(calculateCompletion(completedLectures)).toBeTypeOf("number");
@@ -63,6 +70,16 @@ describe("CourseProgress Model", () => {
 
   it("should return us the isCompleted virtual to equal 100%", () => {
     expect(isCompleted()).toBe(100);
+  });
+
+  it("should remove a lecture from the completed lectures array", async () => {
+    const completedLectures = [1, 2, 3, 4, 5];
+    expect(toggleLecture(1, completedLectures)).toEqual([2, 3, 4, 5]);
+  });
+
+  it("should add a lecture from the completed lectures array", async () => {
+    const completedLectures = [2, 3, 4, 5];
+    expect(toggleLecture(1, completedLectures)).toEqual([2, 3, 4, 5, 1]);
   });
 });
 //#endregion
