@@ -23,11 +23,12 @@ vi.mock("../../models/Note.model.js", () => ({
   Note: {
     find: vi.fn(),
     create: vi.fn(),
+    findByIdAndDelete: vi.fn(),
   },
 }));
 
 //#region Note Controller Test Suite
-describe("GET /api/v1/note/:courseId/notes", () => {
+describe("Note Controller Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -79,6 +80,22 @@ describe("GET /api/v1/note/:courseId/notes", () => {
       ...note,
       course: courseId.toString(),
     });
+  });
+
+  it("should delete a note by it's id", async () => {
+    const courseId = new mongoose.Types.ObjectId();
+    const noteId = new mongoose.Types.ObjectId();
+
+    Note.findByIdAndDelete.mockResolvedValue(noteId);
+
+    const response = await request(app).delete(
+      `/api/v1/note/${courseId}/${noteId}`,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.message).toBe("Note deleted");
+    expect(Note.findByIdAndDelete).toHaveBeenCalledWith(noteId.toString());
   });
 });
 //#endregion
