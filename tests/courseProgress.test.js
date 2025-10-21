@@ -81,5 +81,38 @@ describe("CourseProgress Model", () => {
     const completedLectures = [2, 3, 4, 5];
     expect(toggleLecture(1, completedLectures)).toEqual([2, 3, 4, 5, 1]);
   });
+
+  it("should remove lecture if already completed", async () => {
+    const mockUpdateOne = vi.fn(); // mock updateOne
+
+    // Fake Mongoose document instance
+    const mockProgress = {
+      completedLectures: [1, 2, 3],
+      updateOne: mockUpdateOne,
+      toggleLecture: CourseProgress.prototype.toggleLecture, // use real method logic
+    };
+
+    await mockProgress.toggleLecture(2);
+
+    expect(mockUpdateOne).toHaveBeenCalledWith({
+      $pull: { completedLectures: 2 },
+    });
+  });
+
+  it("should add lecture if not completed", async () => {
+    const mockUpdateOne = vi.fn();
+
+    const mockProgress = {
+      completedLectures: [1, 3],
+      updateOne: mockUpdateOne,
+      toggleLecture: CourseProgress.prototype.toggleLecture,
+    };
+
+    await mockProgress.toggleLecture(2);
+
+    expect(mockUpdateOne).toHaveBeenCalledWith({
+      $addToSet: { completedLectures: 2 },
+    });
+  });
 });
 //#endregion
