@@ -1,9 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { Note } from "../../models/Note.model.js";
-import { User } from "../../models/User.model.js";
 import request from "supertest";
 import mongoose, { isValidObjectId } from "mongoose";
-// import { isAuthenticated } from "../../middleware/auth.middleware.js";
 
 vi.mock("../../middleware/auth.middleware.js", () => ({
   isAuthenticated: (req, res, next) => {
@@ -96,6 +94,28 @@ describe("Note Controller Tests", () => {
     expect(response.body.success).toBe(true);
     expect(response.body.message).toBe("Note deleted");
     expect(Note.findByIdAndDelete).toHaveBeenCalledWith(noteId.toString());
+  });
+
+  it("should return an error if courseId is invalid", async () => {
+    const courseId = "invalidId";
+
+    // Content is the only required field
+    const note = {
+      content: "Test Content",
+      timeStamp: "00:00",
+      course: courseId,
+      user: "mockUserId",
+    };
+
+    Note.create.mockResolvedValue(note);
+
+    const response = await request(app)
+      .post(`/api/v1/note/${courseId}/add`)
+      .send(note);
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe("Course ID is invalid");
+    expect(Note.create).not.toHaveBeenCalled();
   });
 });
 //#endregion
