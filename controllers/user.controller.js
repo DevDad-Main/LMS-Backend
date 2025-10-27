@@ -26,7 +26,7 @@ const options = {
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 //#endregion
 
-//#region Create User Account With Google
+//#region Create Uzser Account With Google
 /**
  * Create a new user account via google
  * @route POST /api/v1/users/google-login
@@ -106,7 +106,6 @@ export const createUserAccount = catchAsync(async (req, res) => {
     throw new AppError("User already exists", 400);
   }
 
-  console.log(existingUser);
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
   const user = await User.create({
@@ -163,12 +162,15 @@ export const authenticateUser = catchAsync(async (req, res) => {
 //#region User Sign In
 export const signInUser = catchAsync(async (req, res) => {
   const { email, password } = req.body;
+  console.log(req.body);
 
-  const exisitingUser = await User.findOne({ email });
+  const exisitingUser = await User.findOne({ email }).select("+password");
 
   if (!exisitingUser) {
     throw new AppError("User not found", 404);
   }
+
+  console.log(exisitingUser);
 
   const isPasswordCorrect = await bcrypt.compare(
     password,

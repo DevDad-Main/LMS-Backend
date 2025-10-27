@@ -82,13 +82,13 @@ const userSchema = new mongoose.Schema(
 userSchema.index({ _id: 1, "enrolledCourses.course": 1 }, { unique: true });
 
 //#region Encrypt password before saving
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    return next();
-  }
-  this.password = await bcrypt.hash(this.password, 12);
-  next();
-});
+// userSchema.pre("save", async function (next) {
+//   if (!this.isModified("password")) {
+//     return next();
+//   }
+//   this.password = await bcrypt.hash(this.password, 12);
+//   next();
+// });
 //#endregion
 
 //#region Compare password method
