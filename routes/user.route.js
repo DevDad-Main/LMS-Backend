@@ -13,6 +13,7 @@ import {
   updateUserProfile,
   getUsersCart,
   getUsersCompletedCourses,
+  signInUser,
 } from "../controllers/user.controller.js";
 import { isAuthenticated } from "../middleware/auth.middleware.js";
 import { upload } from "../utils/multer.js";
@@ -38,7 +39,7 @@ router.get(
 
 router.post("/signup", validateSignup, createUserAccount);
 router.post("/google-login", createUserAccountWithGoogle);
-router.post("/signin", validateSignin, authenticateUser);
+router.post("/signin", validateSignin, signInUser);
 router.post("/cart/add", isAuthenticated, addCourseToCart);
 
 router.patch(

@@ -26,59 +26,11 @@ const options = {
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 //#endregion
 
+//#region Create User Account With Google
 /**
  * Create a new user account via google
  * @route POST /api/v1/users/google-login
  */
-//#region Create User Account With Google
-// export const createUserAccountWithGoogle = catchAsync(async (req, res) => {
-//   const { credential } = req.body;
-//
-//   if (!req.body.credential) {
-//     throw new AppError("Google credential is required", 400);
-//   }
-//
-//   //Verify Credentials
-//   const ticket = await client.verifyIdToken({
-//     idToken: credential,
-//     audience: process.env.GOOGLE_CLIENT_ID,
-//   });
-//
-//   const payload = ticket.getPayload();
-//   const { email, name } = payload;
-//   // Generate a random password for the user as google users dont need one
-//   const password = uuidv7();
-//   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-//
-//   let user = await User.findOne({ email });
-//
-//   if (!user) {
-//     user = await User.create({
-//       name,
-//       email,
-//       password: hashedPassword,
-//       authProvider: "google",
-//     });
-//   }
-//
-//
-//   const { token } = await generateUserToken(user._id);
-//
-//   return res
-//     .status(201)
-//     .cookie("token", token, options)
-//     .json({
-//       success: true,
-//       token,
-//       user: {
-//         name: user.name,
-//         email: user.email,
-//         authProvider: user.authProvider,
-//       },
-//       message: "Google Login Successful",
-//     });
-// });
-
 export const createUserAccountWithGoogle = catchAsync(async (req, res) => {
   const { credential } = req.body;
 
@@ -118,38 +70,6 @@ export const createUserAccountWithGoogle = catchAsync(async (req, res) => {
       lastActive: Date.now(),
     });
   }
-
-  // // Real course ID
-  // const courseId = new mongoose.Types.ObjectId("68d5418149b6fb48a22d8344");
-  //
-  // // Find the course
-  // const course = await Course.findById(courseId).populate({
-  //   path: "sections",
-  //   select: "title _id",
-  //   populate: {
-  //     path: "lectures",
-  //     select: "title videoUrl isCompleted _id",
-  //     model: "Lecture", // Explicitly specify the model name
-  //   },
-  // });
-  //
-  // console.log(course);
-  // if (!course) {
-  //   throw new AppError("Course not found", 404);
-  // }
-  //
-  // await User.findByIdAndUpdate(
-  //   user._id,
-  //   {
-  //     $addToSet: {
-  //       enrolledCourses: {
-  //         course: course._id, // <-- the ObjectId of the course
-  //         enrolledAt: new Date(),
-  //       },
-  //     },
-  //   },
-  //   { new: true },
-  // );
 
   // Generate JWT token
   const { token } = await generateUserToken(user._id);
@@ -214,11 +134,11 @@ export const createUserAccount = catchAsync(async (req, res) => {
 });
 //#endregion
 
+//#region User Authentication
 /**
  * Authenticate user and get token to keep user logged in
  * @route POST /api/v1/users/signin
  */
-//#region User Authentication
 export const authenticateUser = catchAsync(async (req, res) => {
   const userId = req.user?._id;
 
@@ -240,11 +160,49 @@ export const authenticateUser = catchAsync(async (req, res) => {
 });
 //#endregion
 
+//#region User Sign In
+export const signInUser = catchAsync(async (req, res) => {
+  const { email, password } = req.body;
+
+  const exisitingUser = await User.findOne({ email });
+
+  if (!exisitingUser) {
+    throw new AppError("User not found", 404);
+  }
+
+  const isPasswordCorrect = await bcrypt.compare(
+    password,
+    exisitingUser.password,
+  );
+
+  if (!isPasswordCorrect) {
+    throw new AppError("Invalid Password", 400);
+  }
+
+  const { token } = await generateUserToken(exisitingUser._id);
+
+  return res
+    .status(200)
+    .cookie("token", token, options)
+    .json({
+      success: true,
+      token,
+      user: {
+        name: exisitingUser.name,
+        email: exisitingUser.email,
+        authProvider: exisitingUser.authProvider,
+      },
+      message: "User Signed In",
+    });
+});
+
+//#endregion
+
+//#region User Sign out
 /**
  * Sign out user and clear cookie
  * @route POST /api/v1/users/signout
  */
-//#region User Sign out
 export const signOutUser = catchAsync(async (_, res) => {
   return res
     .status(200)
@@ -468,6 +426,7 @@ export const getUsersDashboard = catchAsync(async (req, res) => {
 });
 //#endregion
 
+//#region Get Users Completed Courses
 /**
  * Get current users completed courses
  * @route GET /api/v1/users/dashboard
@@ -487,6 +446,7 @@ export const getUsersCompletedCourses = catchAsync(async (req, res) => {
     .status(200)
     .json({ success: true, courseProgresses, message: "DetailsFetched" });
 });
+//#endregion
 
 /**
  * Update user profile
