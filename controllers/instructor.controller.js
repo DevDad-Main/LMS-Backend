@@ -149,18 +149,39 @@ export const instructorRegisterWithForm = catchAsync(async (req, res) => {
     expertise: parsedExpertise,
   });
 
-  let avatar;
-  try {
-    avatar = await uploadBufferToCloudinary(
-      avatarFile.buffer,
-      instructor.folderId,
-    );
-  } catch (error) {
-    throw new AppError("Failed To Upload Avatar", 400);
-  }
+  // let avatar;
+  // try {
+  //   avatar = await uploadBufferToCloudinary(
+  //     avatarFile.buffer,
+  //     instructor.folderId,
+  //   );
+  // } catch (error) {
+  //   throw new AppError("Failed To Upload Avatar", 400);
+  // }
 
-  instructor.avatar = avatar.secure_url || "";
-  await instructor.save();
+  try {
+    const job = await cloudinaryImageUploaderQueue.add(
+      "upload-new-image",
+      {
+        buffer: avatarFile.buffer,
+        folderId: instructor.folderId,
+      },
+      {
+        attempts: 3,
+        backoff: 2000,
+        removeOnComplete: true, // NOTE: Using free redis instance so uncomment if we have issues
+        removeOnFail: false,
+      },
+    );
+    const result = await job.waitUntilFinished(cloudinaryImageQueueEvents);
+    console.log("Result from Job: ", result);
+    instructor.avatar = result.secure_url || "";
+
+    await instructor.save();
+  } catch (error) {
+    console.log("New Job Upload Error details: ", error);
+    throw new AppError("Failed To Upload Avatar", 400, error);
+  }
 
   const { token } = await generateInstructorToken(instructor?._id);
 

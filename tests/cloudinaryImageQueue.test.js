@@ -2,8 +2,6 @@ import { beforeAll, describe, expect, it, afterAll } from "vitest";
 import IORedis from "ioredis";
 import { Queue, Worker, QueueEvents } from "bullmq";
 
-import * as cloudinaryQueueModule from "../queues/cloudinaryImageQueue.js";
-
 const connection = new IORedis({ maxRetriesPerRequest: null });
 
 let testQueue;
