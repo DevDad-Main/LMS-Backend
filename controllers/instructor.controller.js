@@ -342,10 +342,10 @@ export const updateInstructorDetails = catchAsync(async (req, res) => {
   //   update.avatar = instructor.avatar;
   // }
 
+  //#region Cloudinary Upload Job
   if (updateAvatar === "true" && req.file) {
     const folderId = instructor.folderId || `instructor-${instructor._id}`;
     // const result = await uploadBufferToCloudinary(req.file.buffer, folderId);
-
     try {
       const job = await cloudinaryImageUploaderQueue.add(
         "upload-new-image",
@@ -368,14 +368,23 @@ export const updateInstructorDetails = catchAsync(async (req, res) => {
     } catch (error) {
       console.log("New Job Upload Error details: ", error);
     }
+  }
+  //#endregion
 
+  //#region Cloudinary Delete Job
+  try {
     if (instructor.avatar) {
       const oldPublicId = getPublicIdFromUrl(instructor.avatar);
-      await deleteImageFromCloudinary(oldPublicId);
+      cloudinaryDeleteImageQueue.add("delete-old-image", {
+        oldPublicId,
+      });
+    } else if (!updateAvatar || updateAvatar === "false") {
+      update.avatar = instructor.avatar;
     }
-  } else if (!updateAvatar || updateAvatar === "false") {
-    update.avatar = instructor.avatar;
+  } catch (error) {
+    console.log("New Job Deletion Error details: ", error);
   }
+  //#endregion
 
   const updatedInstructor = await Instructor.findByIdAndUpdate(
     instructorID,
