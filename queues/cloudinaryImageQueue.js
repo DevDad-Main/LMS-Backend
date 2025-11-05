@@ -6,7 +6,11 @@ const cloudinaryImageWorker = new Worker(
   "cloudinary-upload-image",
   async (job) => {
     job.log("Processing Cloudinary Upload Job...", job.name);
-    const { buffer, folderId } = job.data;
+    let { buffer, folderId } = job.data;
+
+    if (buffer && buffer.data) {
+      buffer = Buffer.from(buffer.data);
+    }
 
     job.log("Uploading Image to cloudinary...");
     const result = await uploadBufferToCloudinary(buffer, folderId);
@@ -25,9 +29,12 @@ export const cloudinaryImageUploaderQueue = new Queue(
   },
 );
 
-const cloudinaryImageQueueEvents = new QueueEvents("cloudinary-upload-image", {
-  connection,
-});
+export const cloudinaryImageQueueEvents = new QueueEvents(
+  "cloudinary-upload-image",
+  {
+    connection,
+  },
+);
 
 cloudinaryImageQueueEvents.on("completed", ({ jobId }) => {
   console.log(`Cloudinary Upload Job ${jobId} completed.`);

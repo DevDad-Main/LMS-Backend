@@ -12,7 +12,14 @@ import { AppError } from "../middleware/error.middleware.js";
 import mongoose, { isValidObjectId } from "mongoose";
 import { OAuth2Client } from "google-auth-library";
 import { v7 as uuidv7 } from "uuid";
-import { cloudinaryImageUploaderQueue } from "../queues/cloudinaryImageQueue.js";
+import {
+  cloudinaryImageUploaderQueue,
+  cloudinaryImageQueueEvents,
+} from "../queues/cloudinaryImageQueue.js";
+import {
+  cloudinaryDeleteImageQueue,
+  cloudinaryDeleteImageQueueEvents,
+} from "../queues/cloudinaryDeleteImageQueue.js";
 
 //#region CONSTANTs
 const SALT_ROUNDS = 12;
@@ -260,7 +267,7 @@ export const getInstructorsCourses = catchAsync(async (req, res) => {
     throw new AppError("No courses found for this instructor", 404);
   }
 
-  console.log(instructor.createdCourses);
+  // console.log(instructor.createdCourses);
 
   return res.status(200).json({
     success: true,
@@ -361,10 +368,11 @@ export const updateInstructorDetails = catchAsync(async (req, res) => {
           removeOnFail: false,
         },
       );
-      const result = await job.waitUntilFinished(
-        cloudinaryImageUploaderQueue.client,
-      );
+      const result = await job.waitUntilFinished(cloudinaryImageQueueEvents);
+      console.log("Result from Job: ", result);
       update.avatar = result.secure_url;
+
+      await instructor.save();
     } catch (error) {
       console.log("New Job Upload Error details: ", error);
     }
@@ -375,7 +383,7 @@ export const updateInstructorDetails = catchAsync(async (req, res) => {
   try {
     if (instructor.avatar) {
       const oldPublicId = getPublicIdFromUrl(instructor.avatar);
-      cloudinaryDeleteImageQueue.add("delete-old-image", {
+      await cloudinaryDeleteImageQueue.add("delete-old-image", {
         oldPublicId,
       });
     } else if (!updateAvatar || updateAvatar === "false") {

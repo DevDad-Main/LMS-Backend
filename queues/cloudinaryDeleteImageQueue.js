@@ -18,7 +18,7 @@ export const cloudinaryDeleteImageQueue = new Queue("cloudinary-delete-image", {
   connection,
 });
 
-const cloudinaryDeleteImageQueueEvents = new QueueEvents(
+export const cloudinaryDeleteImageQueueEvents = new QueueEvents(
   "cloudinary-delete-image",
   {
     connection,
