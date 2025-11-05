@@ -4,6 +4,7 @@ import "dotenv/config";
 import { ExpressAdapter } from "@bull-board/express";
 import { createBullBoard } from "@bull-board/api";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
+import { cloudinaryImageQueue } from "./queues/cloudinaryImageQueue.js";
 
 //#region Constants
 const PORT = process.env.PORT || 3000;
@@ -17,7 +18,7 @@ serverAdapter.setBasePath("/admin/queues");
 // NOTE: Attach the queues to the dashboard
 createBullBoard({
   // queues: [new BullMQAdapter(cloudinaryImageQueue)],
-  queues: [],
+  queues: [new BullMQAdapter(cloudinaryImageQueue)],
   serverAdapter,
 });
 
