@@ -4,19 +4,20 @@ import { User } from "../models/User.model.js";
 
 //#region User model Test Suite
 describe("User Model", () => {
-  it("should hash the password before saving", async () => {
-    const user = new User({
-      name: "John Doe",
-      email: "johndoe@example.com",
-      password: "password123",
-    });
-    await user.save();
-
-    expect(user.password).not.toBe("password123");
-
-    const isMatch = await bcrypt.compare("password123", user.password);
-    expect(isMatch).toBe(true);
-  });
+  // NOTE: Redundant unit test as we don't use the pre save hook anymore
+  // it("should hash the password before saving", async () => {
+  //   const user = new User({
+  //     name: "John Doe",
+  //     email: "johndoe@example.com",
+  //     password: "password123",
+  //   });
+  //   await user.save();
+  //
+  //   expect(user.password).not.toBe("password123");
+  //
+  //   const isMatch = await bcrypt.compare("password123", user.password);
+  //   expect(isMatch).toBe(true);
+  // });
 
   it("should fail if required fields are missing", async () => {
     const user = new User({});
@@ -32,7 +33,7 @@ describe("User Model", () => {
     await user.save();
 
     const isMatch = await user.comparePassword("password123");
-    expect(isMatch).toBe(true);
+    expect(isMatch).toEqual(true);
   });
 });
 //#endregion

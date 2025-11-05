@@ -4,7 +4,7 @@ import "dotenv/config";
 import { ExpressAdapter } from "@bull-board/express";
 import { createBullBoard } from "@bull-board/api";
 import { BullMQAdapter } from "@bull-board/api/bullMQAdapter";
-import { cloudinaryImageQueue } from "./queues/cloudinaryImageQueue.js";
+import { cloudinaryImageUploaderQueue } from "./queues/cloudinaryImageQueue.js";
 
 //#region Constants
 const PORT = process.env.PORT || 3000;
@@ -18,13 +18,22 @@ serverAdapter.setBasePath("/admin/queues");
 // NOTE: Attach the queues to the dashboard
 createBullBoard({
   // queues: [new BullMQAdapter(cloudinaryImageQueue)],
-  queues: [new BullMQAdapter(cloudinaryImageQueue)],
+  queues: [new BullMQAdapter(cloudinaryImageUploaderQueue)],
   serverAdapter,
 });
 
 // NOTE: Mount the dashboard route
 app.use("/admin/queues", serverAdapter.getRouter());
 //#endregion
+
+//#region 404 Handler
+app.use((req, res) => {
+  res.status(404).json({
+    status: "error",
+    message: "Route not found",
+  });
+});
+//#endregion;
 
 //#region DB Connection
 await connectDB();

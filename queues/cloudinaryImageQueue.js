@@ -1,36 +1,40 @@
 import { Queue, Worker, QueueEvents } from "bullmq";
 import { connection } from "../configs/bullmq.js";
-
-const CLOUDINARY_IMAGE_QUEUE = "cloudinaryImageQueue";
+import { uploadBufferToCloudinary } from "../utils/cloudinary.js";
 
 const cloudinaryImageWorker = new Worker(
-  CLOUDINARY_IMAGE_QUEUE,
+  "cloudinary-upload-image",
   async (job) => {
-    await job.log("Processing Cloudinary Image Job...", job.name);
+    job.log("Processing Cloudinary Upload Job...", job.name);
+    const { buffer, folderId } = job.data;
 
-    try {
-    } catch (error) {
-      console.log("Error details: ", error);
-      await job.log(error.message, job.name);
-    }
+    job.log("Uploading Image to cloudinary...");
+    const result = await uploadBufferToCloudinary(buffer, folderId);
+    job.log("Uploaded Image to cloudinary...");
+
+    // NOTE: Now we can return the result and access it in our controller
+    return { secure_url: result.secure_url, public_id: result.public_id };
   },
   { connection },
 );
 
-export const cloudinaryImageQueue = new Queue(CLOUDINARY_IMAGE_QUEUE, {
-  connection,
-});
+export const cloudinaryImageUploaderQueue = new Queue(
+  "cloudinary-upload-image",
+  {
+    connection,
+  },
+);
 
-const cloudinaryImageQueueEvents = new QueueEvents(CLOUDINARY_IMAGE_QUEUE, {
+const cloudinaryImageQueueEvents = new QueueEvents("cloudinary-upload-image", {
   connection,
 });
 
 cloudinaryImageQueueEvents.on("completed", ({ jobId }) => {
-  console.log(`Cloudinary Image Job ${jobId} completed.`);
+  console.log(`Cloudinary Upload Job ${jobId} completed.`);
 });
 
 cloudinaryImageQueueEvents.on("failed", ({ jobId, failedReason }) => {
-  console.log(`Cloudinary Image Job ${jobId} failed - ${failedReason}.`);
+  console.log(`Cloudinary Upload Job ${jobId} failed - ${failedReason}.`);
 });
 
 cloudinaryImageQueueEvents.on("error", (err) => {

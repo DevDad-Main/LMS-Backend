@@ -9,11 +9,10 @@ import {
 } from "../utils/cloudinary.js";
 import { catchAsync } from "../middleware/error.middleware.js";
 import { AppError } from "../middleware/error.middleware.js";
-import { Course } from "../models/Course.model.js";
-import crypto from "crypto";
 import mongoose, { isValidObjectId } from "mongoose";
 import { OAuth2Client } from "google-auth-library";
 import { v7 as uuidv7 } from "uuid";
+import { cloudinaryImageUploaderQueue } from "../queues/cloudinaryImageQueue.js";
 
 //#region CONSTANTs
 const SALT_ROUNDS = 12;
@@ -329,16 +328,51 @@ export const updateInstructorDetails = catchAsync(async (req, res) => {
 
   const instructor = await Instructor.findById(instructorID);
 
+  // if (updateAvatar === "true" && req.file) {
+  //   const folderId = instructor.folderId || `instructor-${instructor._id}`;
+  //   const result = await uploadBufferToCloudinary(req.file.buffer, folderId);
+  //
+  //   if (instructor.avatar) {
+  //     const oldPublicId = getPublicIdFromUrl(instructor.avatar);
+  //     await deleteImageFromCloudinary(oldPublicId);
+  //   }
+  //
+  //   update.avatar = result.secure_url;
+  // } else if (!updateAvatar || updateAvatar === "false") {
+  //   update.avatar = instructor.avatar;
+  // }
+
   if (updateAvatar === "true" && req.file) {
     const folderId = instructor.folderId || `instructor-${instructor._id}`;
-    const result = await uploadBufferToCloudinary(req.file.buffer, folderId);
+    // const result = await uploadBufferToCloudinary(req.file.buffer, folderId);
+
+    try {
+      const job = await cloudinaryImageUploaderQueue.add(
+        "upload-new-image",
+        {
+          buffer: req.file.buffer,
+          folderId,
+        },
+        {
+          attempts: 3, // Rety 3 times
+          backoff: 2000, // Wait for 2 seconds before retrying
+          removeOnComplete: 100, //N NOTE: Only keep the last 100 jobs in the queue - Good for testing
+          // removeOnComplete: true, // NOTE: Using free redis instance so uncomment if we have issues
+          removeOnFail: false,
+        },
+      );
+      const result = await job.waitUntilFinished(
+        cloudinaryImageUploaderQueue.client,
+      );
+      update.avatar = result.secure_url;
+    } catch (error) {
+      console.log("New Job Upload Error details: ", error);
+    }
 
     if (instructor.avatar) {
       const oldPublicId = getPublicIdFromUrl(instructor.avatar);
       await deleteImageFromCloudinary(oldPublicId);
     }
-
-    update.avatar = result.secure_url;
   } else if (!updateAvatar || updateAvatar === "false") {
     update.avatar = instructor.avatar;
   }

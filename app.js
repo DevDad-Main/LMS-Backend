@@ -83,15 +83,6 @@ app.use("/api/v1/review", reviewRoute);
 app.use("/health", healthRoute);
 //#endregion
 
-//#region 404 Handler
-app.use((req, res) => {
-  res.status(404).json({
-    status: "error",
-    message: "Route not found",
-  });
-});
-//#endregion;
-
 //#region Global Error Handler.
 app.use(errorHandler);
 // app.use((err, req, res, next) => {
