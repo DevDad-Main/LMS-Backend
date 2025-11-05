@@ -2,10 +2,7 @@ import { User } from "../models/User.model.js";
 import { Instructor } from "../models/Instructor.model.js";
 import bcrypt from "bcryptjs";
 import { generateInstructorToken } from "../utils/generateToken.js";
-import {
-  uploadBufferToCloudinary,
-  getPublicIdFromUrl,
-} from "../utils/cloudinary.js";
+import { getPublicIdFromUrl } from "../utils/cloudinary.js";
 import { catchAsync } from "../middleware/error.middleware.js";
 import { AppError } from "../middleware/error.middleware.js";
 import mongoose, { isValidObjectId } from "mongoose";
@@ -15,10 +12,7 @@ import {
   cloudinaryImageUploaderQueue,
   cloudinaryImageQueueEvents,
 } from "../queues/cloudinaryImageQueue.js";
-import {
-  cloudinaryDeleteImageQueue,
-  cloudinaryDeleteImageQueueEvents,
-} from "../queues/cloudinaryDeleteImageQueue.js";
+import { cloudinaryDeleteImageQueue } from "../queues/cloudinaryDeleteImageQueue.js";
 
 //#region CONSTANTs
 const SALT_ROUNDS = 12;
@@ -396,22 +390,23 @@ export const updateInstructorDetails = catchAsync(async (req, res) => {
     } catch (error) {
       console.log("New Job Upload Error details: ", error);
     }
-  }
-  //#endregion
 
-  //#region Cloudinary Delete Job
-  try {
-    if (instructor.avatar) {
-      const oldPublicId = getPublicIdFromUrl(instructor.avatar);
-      await cloudinaryDeleteImageQueue.add("delete-old-image", {
-        oldPublicId,
-      });
-    } else if (!updateAvatar || updateAvatar === "false") {
-      update.avatar = instructor.avatar;
+    //#region Cloudinary Delete Job
+    try {
+      if (instructor.avatar) {
+        const oldPublicId = getPublicIdFromUrl(instructor.avatar);
+        await cloudinaryDeleteImageQueue.add("delete-old-image", {
+          oldPublicId,
+        });
+      }
+    } catch (error) {
+      console.log("New Job Deletion Error details: ", error);
     }
-  } catch (error) {
-    console.log("New Job Deletion Error details: ", error);
+    //#endregion
+  } else if (!updateAvatar || updateAvatar === "false") {
+    update.avatar = instructor.avatar;
   }
+
   //#endregion
 
   const updatedInstructor = await Instructor.findByIdAndUpdate(

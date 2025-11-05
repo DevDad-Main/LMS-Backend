@@ -13,6 +13,11 @@ import {
 import { catchAsync } from "../middleware/error.middleware.js";
 import { AppError } from "../middleware/error.middleware.js";
 import mongoose, { isValidObjectId } from "mongoose";
+import {
+  cloudinaryImageUploaderQueue,
+  cloudinaryImageQueueEvents,
+} from "../queues/cloudinaryImageQueue.js";
+import { cloudinaryDeleteImageQueue } from "../queues/cloudinaryDeleteImageQueue.js";
 
 //#region Get Courses By Criteria -> Filters etc
 /**
@@ -121,24 +126,49 @@ export const createNewCourse = catchAsync(async (req, res) => {
     courseOwner: req.instructor?._id,
   });
 
-  console.log(thumbnail);
-  console.log(thumbnail.buffer);
+  // console.log(thumbnail);
+  // console.log(thumbnail.buffer);
 
-  let result;
+  // let result;
+  // try {
+  //   result = await uploadBufferToCloudinary(thumbnail.buffer, course.folderId);
+  //
+  //   console.log("Result: ", result);
+  //
+  //   if (!result) {
+  //     throw new AppError("Can't upload thumbnail to cloundinary", 400);
+  //   }
+  // } catch (error) {
+  //   throw new AppError(error.message, error.status);
+  // }
+
   try {
-    result = await uploadBufferToCloudinary(thumbnail.buffer, course.folderId);
+    const job = await cloudinaryImageUploaderQueue.add(
+      "upload-new-image",
+      {
+        buffer: thumbnail.buffer,
+        folderId: course.folderId,
+      },
+      {
+        attempts: 3,
+        backoff: 2000,
+        removeOnComplete: 10, // NOTE: Using free redis instance so uncomment if we have issues
+        // removeOnComplete: true, // NOTE: Using free redis instance so uncomment if we have issues
+        removeOnFail: false,
+      },
+    );
+    const result = await job.waitUntilFinished(cloudinaryImageQueueEvents);
+    console.log("Result from Job: ", result);
+    course.thumbnail = result.secure_url || "";
 
-    console.log("Result: ", result);
-
-    if (!result) {
-      throw new AppError("Can't upload thumbnail to cloundinary", 400);
-    }
+    await course.save();
   } catch (error) {
-    throw new AppError(error.message, error.status);
+    console.log("New Job Upload Error details: ", error);
+    throw new AppError("Failed To Upload Avatar", 400, error);
   }
 
-  course.thumbnail = result.secure_url || "";
-  await course.save();
+  // course.thumbnail = result.secure_url || "";
+  // await course.save();
 
   await Instructor.findByIdAndUpdate(req.instructor?._id, {
     $addToSet: { createdCourses: course },
@@ -236,17 +266,46 @@ export const updateCourseDetails = catchAsync(async (req, res) => {
     update.languages = JSON.parse(languages);
   }
 
-  let thumbnail;
+  // let thumbnail;
   if (updateThumbnail === "true" && req.file) {
     const folderId = courseFolderId.folderId || `course-${courseFolderId._id}`;
-    const result = await uploadBufferToCloudinary(req.file.buffer, folderId);
 
-    if (courseFolderId.thumbnail) {
-      const oldPublicId = getPublicIdFromUrl(courseFolderId.thumbnail);
-      await deleteImageFromCloudinary(oldPublicId);
+    try {
+      const job = await cloudinaryImageUploaderQueue.add(
+        "upload-new-image",
+        {
+          buffer: req.file.buffer,
+          folderId,
+        },
+        {
+          attempts: 3, // Rety 3 times
+          backoff: 2000, // Wait for 2 seconds before retrying
+          removeOnComplete: 100, //N NOTE: Only keep the last 100 jobs in the queue - Good for testing
+          // removeOnComplete: true, // NOTE: Using free redis instance so uncomment if we have issues
+          removeOnFail: false,
+        },
+      );
+      const result = await job.waitUntilFinished(cloudinaryImageQueueEvents);
+      console.log("Result from Job: ", result);
+      update.thumbnail = result.secure_url;
+
+      // await course.save();
+    } catch (error) {
+      console.log("New Job Upload Error details: ", error);
     }
 
-    update.thumbnail = result.secure_url;
+    //#region Cloudinary Delete Job
+    try {
+      if (courseFolderId.thumbnail) {
+        const oldPublicId = getPublicIdFromUrl(courseFolderId.thumbnail);
+        await cloudinaryDeleteImageQueue.add("delete-old-image", {
+          oldPublicId,
+        });
+      }
+    } catch (error) {
+      console.log("New Job Deletion Error details: ", error);
+    }
+    //#endregion
   } else if (!updateThumbnail || updateThumbnail === "false") {
     update.thumbnail = courseFolderId.thumbnail;
   }
