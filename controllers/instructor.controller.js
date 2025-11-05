@@ -4,7 +4,6 @@ import bcrypt from "bcryptjs";
 import { generateInstructorToken } from "../utils/generateToken.js";
 import {
   uploadBufferToCloudinary,
-  deleteImageFromCloudinary,
   getPublicIdFromUrl,
 } from "../utils/cloudinary.js";
 import { catchAsync } from "../middleware/error.middleware.js";
