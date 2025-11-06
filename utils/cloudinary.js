@@ -12,7 +12,7 @@ cloudinary.config({
  * Uploads the specified file using Buffers and Streams.
  * @param {Int32Array} buffer
  * @param {string} folderId
- * @param {string} resourceType
+ * @param {string} resourceType - Defaults to "image" but can be "video"
  * @returns Promise -> If we successfully manage to pipe our stream with our buffered data file to Cloudinary
  */
 export const uploadBufferToCloudinary = async (
@@ -42,6 +42,11 @@ export const uploadBufferToCloudinary = async (
 //#endregion
 
 //#region Get Public ID from URL
+/**
+ * Gets the public ID from the specified URL
+ * @param {string} url
+ * @returns {string} publicId - The publicId of the uploaded file.
+ */
 export const getPublicIdFromUrl = (url) => {
   if (!url || typeof url !== "string" || !url.includes("cloudinary"))
     throw new Error("Invalid URL");

@@ -553,11 +553,17 @@ export const addLectureToCourseAndSection = catchAsync(async (req, res) => {
   let duration = 0;
   if (type === "Video" && videoFile) {
     const folderId = course.folderId || `course-${courseId}`;
-    const result = await uploadBufferToCloudinary(
-      videoFile.buffer,
-      folderId,
-      "video",
-    );
+    // const result = await uploadBufferToCloudinary(
+    //   videoFile.buffer,
+    //   folderId,
+    //   "video",
+    // );
+
+    try {
+      await cloudinaryImageUploaderQueue.add("");
+    } catch (error) {
+      console.log(error);
+    }
     videoUrl = result.secure_url;
     duration = result.duration || 0;
   }
